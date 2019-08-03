@@ -20,6 +20,7 @@ import gc
 import feedparser
 import numpy as np
 from pytz import timezone
+from tzlocal import get_localzone
 
 from settings import *
 from image_data import *
@@ -41,26 +42,24 @@ EPD_WIDTH = 640
 EPD_HEIGHT = 384
 
 if language in ['ja','zh','zh_tw','ko']:
-    default = ImageFont.truetype(fpath+NotoSansCJK+'Light.otf', 18)
-    semi = ImageFont.truetype(fpath+NotoSansCJK+'DemiLight.otf', 18)
-    bold = ImageFont.truetype(fpath+NotoSansCJK+'Regular.otf', 18)
-    month_font = ImageFont.truetype(fpath+NotoSansCJK+'DemiLight.otf', 40)
+    default = ImageFont.truetype(str(fpath / (NotoSansCJK + 'Light.otf')), 18)
+    semi = ImageFont.truetype(str(fpath / (NotoSansCJK + 'DemiLight.otf')), 18)
+    bold = ImageFont.truetype(str(fpath / (NotoSansCJK + 'Regular.otf')), 18)
+    month_font = ImageFont.truetype(str(fpath / (NotoSansCJK + 'DemiLight.otf')), 40)
 else:
-    default = ImageFont.truetype(fpath+NotoSans+'Light.ttf', 18)
-    semi = ImageFont.truetype(fpath+NotoSans+'.ttf', 18)
-    bold = ImageFont.truetype(fpath+NotoSans+'Medium.ttf', 18)
-    month_font = ImageFont.truetype(fpath+NotoSans+'Light.ttf', 40)
+    default = ImageFont.truetype(str(fpath / (NotoSans + 'Light.ttf')), 18)
+    semi = ImageFont.truetype(str(fpath / (NotoSans + '.ttf')), 18)
+    bold = ImageFont.truetype(str(fpath / (NotoSans + 'Medium.ttf')), 18)
+    month_font = ImageFont.truetype(str(fpath / (NotoSans + 'Light.ttf')), 40)
 
-w_font_l = ImageFont.truetype(fpath+weather_font, 60)
-w_font_s = ImageFont.truetype(fpath+weather_font, 22)
+w_font_l = ImageFont.truetype(str(fpath / weather_font), 60)
+w_font_s = ImageFont.truetype(str(fpath / weather_font), 22)
 
 im_open = Image.open
 
 '''Get system timezone and set timezone accordingly'''
-with open('/etc/timezone','r') as file:
-    lines = file.readlines()
-    system_tz = lines[0].rstrip()
-    local_tz = timezone(system_tz)
+system_tz = get_localzone()
+local_tz = timezone(str(system_tz))
 
 print('Initialising weather')
 owm = pyowm.OWM(api_key, language=language)
@@ -70,8 +69,9 @@ def main():
     calibration_countdown = 'initial'
     while True:
         time = datetime.now().replace(tzinfo=local_tz)
-        hour = int(time.strftime("%-H"))
-        month = int(time.now().strftime('%-m'))
+        print(time)
+        hour = int(time.strftime("%H"))
+        month = int(time.now().strftime('%m'))
         year = int(time.now().strftime('%Y'))
         mins = int(time.strftime("%M"))
         seconds = int(time.strftime("%S"))
@@ -81,7 +81,7 @@ def main():
             print('_________Starting new loop___________'+'\n')
 
             """Start by printing the date and time for easier debugging"""
-            print('Date:', time.strftime('%a %-d %b %y'), 'Time: '+time.strftime('%H:%M')+'\n')
+            print('Date:', time.strftime('%a %d %b %y'), 'Time: '+time.strftime('%H:%M')+'\n')
 
             """At the hours specified in the settings file,
             calibrate the display to prevent ghosting"""
@@ -235,18 +235,18 @@ def main():
 
                 """Create the calendar template of the current month"""
                 for numbers in cal[0]:
-                    image.paste(im_open(dpath+str(numbers)+'.jpeg'), positions['a'+str(cal[0].index(numbers)+1)])
+                    image.paste(im_open(str(dpath /(str(numbers)+'.jpeg'))), positions['a'+str(cal[0].index(numbers)+1)])
                 for numbers in cal[1]:
-                    image.paste(im_open(dpath+str(numbers)+'.jpeg'), positions['b'+str(cal[1].index(numbers)+1)])
+                    image.paste(im_open(str(dpath /(str(numbers)+'.jpeg'))), positions['b'+str(cal[1].index(numbers)+1)])
                 for numbers in cal[2]:
-                    image.paste(im_open(dpath+str(numbers)+'.jpeg'), positions['c'+str(cal[2].index(numbers)+1)])
+                    image.paste(im_open(str(dpath /(str(numbers)+'.jpeg'))), positions['c'+str(cal[2].index(numbers)+1)])
                 for numbers in cal[3]:
-                    image.paste(im_open(dpath+str(numbers)+'.jpeg'), positions['d'+str(cal[3].index(numbers)+1)])
+                    image.paste(im_open(str(dpath /(str(numbers)+'.jpeg'))), positions['d'+str(cal[3].index(numbers)+1)])
                 for numbers in cal[4]:
-                    image.paste(im_open(dpath+str(numbers)+'.jpeg'), positions['e'+str(cal[4].index(numbers)+1)])
+                    image.paste(im_open(str(dpath /(str(numbers)+'.jpeg'))), positions['e'+str(cal[4].index(numbers)+1)])
                 if len(cal) is 6:
                     for numbers in cal[5]:
-                        image.paste(im_open(dpath+str(numbers)+'.jpeg'), positions['f'+str(cal[5].index(numbers)+1)])
+                        image.paste(im_open(str(dpath /(str(numbers)+'.jpeg'))), positions['f'+str(cal[5].index(numbers)+1)])
 
                 """Draw a larger square on today's date"""
                 today = time.day
@@ -479,7 +479,8 @@ def main():
             epd.init()
             sleep(5)
             print('Converting image to data and sending it to the display')
-            epd.display_frame(epd.get_frame_buffer(improved_image))
+            epd.display_image(improved_image)
+            #epd.display_frame(epd.get_frame_buffer(improved_image))
             print('Data sent successfully')
             print('______Powering off the E-Paper until the next loop______'+'\n')
             epd.sleep()
