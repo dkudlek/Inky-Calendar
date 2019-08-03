@@ -1,6 +1,6 @@
-import epdif
+import epdif as epdif
+#import fake_epdif as epdif
 from PIL import Image
-import RPi.GPIO as GPIO
 from settings import display_colours
 
 # Display resolution
@@ -48,166 +48,120 @@ VCM_DC_SETTING                              = 0x82
 
 class EPD:
     def __init__(self):
-        self.reset_pin = epdif.RST_PIN
-        self.dc_pin = epdif.DC_PIN
-        self.busy_pin = epdif.BUSY_PIN
         self.width = EPD_WIDTH
         self.height = EPD_HEIGHT
+
 
     def digital_write(self, pin, value):
         epdif.epd_digital_write(pin, value)
 
+
     def digital_read(self, pin):
         return epdif.epd_digital_read(pin)
+
 
     def delay_ms(self, delaytime):
         epdif.epd_delay_ms(delaytime)
 
-    def send_command(self, command):
-        self.digital_write(self.dc_pin, GPIO.LOW)
-        # the parameter type is list but not int
-        # so use [command] instead of command
-        epdif.spi_transfer([command])
-
-    def send_data(self, data):
-        self.digital_write(self.dc_pin, GPIO.HIGH)
-        # the parameter type is list but not int
-        # so use [data] instead of data
-        epdif.spi_transfer([data])
 
     def init(self):
         if (epdif.epd_init() != 0):
             return -1
         self.reset()
-        self.send_command(POWER_SETTING)
-        self.send_data(0x37)
-        self.send_data(0x00)
-        self.send_command(PANEL_SETTING)
-        self.send_data(0xCF)
-        self.send_data(0x08)
-        self.send_command(BOOSTER_SOFT_START)
-        self.send_data(0xc7)
-        self.send_data(0xcc)
-        self.send_data(0x28)
-        self.send_command(POWER_ON)
+        epdif.send_command(POWER_SETTING)
+        epdif.send_data(0x37)
+        epdif.send_data(0x00)
+        epdif.send_command(PANEL_SETTING)
+        epdif.send_data(0xCF)
+        epdif.send_data(0x08)
+        epdif.send_command(BOOSTER_SOFT_START)
+        epdif.send_data(0xc7)
+        epdif.send_data(0xcc)
+        epdif.send_data(0x28)
+        epdif.send_command(POWER_ON)
         self.wait_until_idle()
-        self.send_command(PLL_CONTROL)
-        self.send_data(0x3c)
-        self.send_command(TEMPERATURE_CALIBRATION)
-        self.send_data(0x00)
-        self.send_command(VCOM_AND_DATA_INTERVAL_SETTING)
-        self.send_data(0x77)
-        self.send_command(TCON_SETTING)
-        self.send_data(0x22)
-        self.send_command(TCON_RESOLUTION)
-        self.send_data(0x02)     #source 640
-        self.send_data(0x80)
-        self.send_data(0x01)     #gate 384
-        self.send_data(0x80)
-        self.send_command(VCM_DC_SETTING)
-        self.send_data(0x1E)      #decide by LUT file
-        self.send_command(0xe5)           #FLASH MODE
-        self.send_data(0x03)
+        epdif.send_command(PLL_CONTROL)
+        epdif.send_data(0x3c)
+        epdif.send_command(TEMPERATURE_CALIBRATION)
+        epdif.send_data(0x00)
+        epdif.send_command(VCOM_AND_DATA_INTERVAL_SETTING)
+        epdif.send_data(0x77)
+        epdif.send_command(TCON_SETTING)
+        epdif.send_data(0x22)
+        epdif.send_command(TCON_RESOLUTION)
+        epdif.send_data(0x02)     #source 640
+        epdif.send_data(0x80)
+        epdif.send_data(0x01)     #gate 384
+        epdif.send_data(0x80)
+        epdif.send_command(VCM_DC_SETTING)
+        epdif.send_data(0x1E)      #decide by LUT file
+        epdif.send_command(0xe5)           #FLASH MODE
+        epdif.send_data(0x03)
+
 
     def wait_until_idle(self):
-        while(self.digital_read(self.busy_pin) == 0):      # 0: busy, 1: idle
+        while(epdif.is_busy()):      # 0: busy, 1: idle
             self.delay_ms(100)
 
+
     def reset(self):
-        self.digital_write(self.reset_pin, GPIO.LOW)         # module reset
+        epdif.reset_low()
         self.delay_ms(200)
-        self.digital_write(self.reset_pin, GPIO.HIGH)
+        epdif.reset_high()
         self.delay_ms(200)
 
-    
-    def get_frame_buffer(self, image):
-        if display_colours is 'bwr':
-            buf = [0x00] * int(self.width * self.height / 4)
-            image_grayscale = image.convert('L', dither=None)
-            imwidth, imheight = image_grayscale.size
-            if imwidth != self.width or imheight != self.height:
-                raise ValueError('Image must be same dimensions as display \
-                    ({0}x{1}).' .format(self.width, self.height))
-            pixels = image_grayscale.load()
-            
-            for y in range(self.height):
-                for x in range(self.width):
-                    # Set the bits for the column of pixels at the current position.
-                    if pixels[x, y] == 0: # black
-                        buf[int((x + y * self.width) / 4)] &= ~(0xC0 >> (x % 4 * 2))
-                    elif pixels[x, y] == 76: # convert gray to red
-                        buf[int((x + y * self.width) / 4)] &= ~(0xC0 >> (x % 4 * 2))
-                        buf[int((x + y * self.width) / 4)] |= 0x40 >> (x % 4 * 2)
-                    else:                           # white
-                        buf[int((x + y * self.width) / 4)] |= 0xC0 >> (x % 4 * 2)
-            return buf
+    def serialize(self, image):
+        # serialize
+        buffer = [0x00] * int(self.width * self.height / 2)
+        pixels = list(image.getdata())
+        byte = 0x00
+        for idx, val in enumerate(pixels):
+            # Set the bits for the column of pixels at the current position.
+            nibble = None
+            if val == 0:  # black
+                nibble = 0x0
+            elif val == 76:  # convert gray to red
+                nibble = 0x4
+            else:  # white
+                nibble = 0x3
 
-        if display_colours is 'bw':
-            buf = [0x00] * int(self.width * self.height / 8)
-            image_monocolor = image.convert('1')
-            imwidth, imheight = image_monocolor.size
-            if imwidth != self.width or imheight != self.height:
-                raise ValueError('Image must be same dimensions as display \
-                    ({0}x{1}).' .format(self.width, self.height))
-            pixels = image_monocolor.load()
-            for y in range(self.height):
-                for x in range(self.width):
-                    # Set the bits for the column of pixels at the current position.
-                    if pixels[x, y] != 0:
-                        buf[int((x + y * self.width) / 8)] |= 0x80 >> (x % 8)
-            return buf
-        
-    
-    def display_frame(self, frame_buffer):
-        self.send_command(DATA_START_TRANSMISSION_1)
-        if display_colours is 'bwr':
-            for i in range(0, int(self.width / 4 * self.height)):
-                temp1 = frame_buffer[i]
-                j = 0
-                while (j < 4):
-                    if ((temp1 & 0xC0) == 0xC0):
-                        temp2 = 0x03
-                    elif ((temp1 & 0xC0) == 0x00):
-                        temp2 = 0x00
-                    else:
-                        temp2 = 0x04
-                    temp2 = (temp2 << 4) & 0xFF
-                    temp1 = (temp1 << 2) & 0xFF
-                    j += 1
-                    if((temp1 & 0xC0) == 0xC0):
-                        temp2 |= 0x03
-                    elif ((temp1 & 0xC0) == 0x00):
-                        temp2 |= 0x00
-                    else:
-                        temp2 |= 0x04
-                    temp1 = (temp1 << 2) & 0xFF
-                    self.send_data(temp2)
-                    j += 1
-        if display_colours is 'bw':
-            for i in range(0, 30720):
-                temp1 = frame_buffer[i]
-                j = 0
-                while (j < 8):
-                    if(temp1 & 0x80):
-                        temp2 = 0x03
-                    else:
-                        temp2 = 0x00
-                    temp2 = (temp2 << 4) & 0xFF
-                    temp1 = (temp1 << 1) & 0xFF
-                    j += 1
-                    if(temp1 & 0x80):
-                        temp2 |= 0x03
-                    else:
-                        temp2 |= 0x00
-                    temp1 = (temp1 << 1) & 0xFF
-                    self.send_data(temp2)
-                    j += 1
-        self.send_command(DISPLAY_REFRESH)
+            if idx % 2:
+                byte |= (nibble << 4)
+            else:
+                byte |= nibble
+                buffer[int((idx - 1) / 2)] = byte
+                byte = 0x00
+        return buffer
+
+    def send_buffer(self, buffer):
+        epdif.send_command(DATA_START_TRANSMISSION_1)
+        for el in buffer:
+            epdif.send_data(el)
+        epdif.send_command(DISPLAY_REFRESH)
         self.delay_ms(100)
         self.wait_until_idle()
 
+    def convert_image(self, image, display_mode='bw'):
+        image_converted = None
+        if display_mode is 'bwr':
+            image_converted = image.convert('L', dither=None)
+        elif display_mode is 'bw':
+            image_converted = image.convert('1')
+
+        # sanity check
+        imwidth, imheight = image_converted.size
+        if imwidth != self.width or imheight != self.height:
+            raise ValueError('Image must be same dimensions as display \
+                ({0}x{1}).' .format(self.width, self.height))
+        return image_converted
+
+    def display_image(self, image):
+        image_converted = self.convert_image(image, display_mode=display_colours)
+        buffer = self.serialize(image_converted)
+        self.send_buffer(buffer)
+
     def sleep(self):
-        self.send_command(POWER_OFF)
+        epdif.send_command(POWER_OFF)
         self.wait_until_idle()
-        self.send_command(DEEP_SLEEP)
-        self.send_data(0xa5)
+        epdif.send_command(DEEP_SLEEP)
+        epdif.send_data(0xa5)
