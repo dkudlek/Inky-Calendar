@@ -1,5 +1,6 @@
 import epdif as epdif
 #import fake_epdif as epdif
+import time
 from PIL import Image
 from settings import display_colours
 
@@ -120,10 +121,10 @@ class EPD:
             nibble = None
             if val == 0:  # black
                 nibble = 0x0
-            elif val == 76:  # convert gray to red
-                nibble = 0x4
-            else:  # white
+            elif val == 255:  # white
                 nibble = 0x3
+            else:  # red
+                nibble = 0x4
 
             if idx % 2:
                 byte |= (nibble << 4)
@@ -165,3 +166,32 @@ class EPD:
         self.wait_until_idle()
         epdif.send_command(DEEP_SLEEP)
         epdif.send_data(0xa5)
+
+    def calibration(self):
+        """Function for Calibration"""
+        print('_________Calibration for E-Paper started_________'+'\n')
+        black_img = Image.new('RGB', (self.width, self.height), "black")
+        red_img = Image.new('RGB', (self.width, self.height), "red")
+        white_img = Image.new('RGB', (self.width, self.height), "white")
+        turns = 2
+        for i in range(turns):
+            self.init()
+            print('Calibrating black...')
+            self.display_image(black_img)
+            if display_colours == "bwr":
+                print('calibrating red...')
+                self.display_image(red_img)
+            print('Calibrating white...')
+            self.display_image(white_img)
+            self.sleep()
+            print('Cycle {}/{} complete\n'.format(str(i+1), turns))
+        print('Calibration complete')
+
+
+if __name__ == '__main__':
+    """Added timer"""
+    start = time.time()
+    epd = EPD()
+    epd.calibration()
+    end = time.time()
+    print('Calibration complete in', int(end - start), 'seconds')
