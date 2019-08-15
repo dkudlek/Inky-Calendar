@@ -1,6 +1,6 @@
 feedparser
 git
-ics
+ics==0.5
 libopenjp2-7-dev
 libtiff5
 pathlib

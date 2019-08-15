@@ -46,7 +46,7 @@ if [ "$option" = 1 ]; then
 	sleep 2
 	cp -r /home/pi/Inky-Calendar /home/pi/Inky-Calendar-old
 	sudo rm -r /home/pi/Inky-Calendar
-	mv /home/pi/Inky-Calendar-old/Calendar /home/pi/Inky-Calendar-old/Calendar-old #added due to relative path which searches for 
+	mv /home/pi/Inky-Calendar-old/Calendar /home/pi/Inky-Calendar-old/Calendar-old #added due to relative path which searches for
 	# the 'Calendar' folder
 	echo "Updating now..."
         cd
@@ -57,7 +57,7 @@ if [ "$option" = 1 ]; then
 	echo -e "\e[1;36m"Would you like to update the Inky-Calendar software anyway?"\e[0m"
         echo -e "\e[97mPlease type [y] for yes or [n] for no and confirm your selection with [ENTER]"
         read -r -p 'Waiting for input...  ' update_anyway
-    
+
         if [ "$update_anyway" != Y ] && [ "$update_anyway" != y ] && [ "$update_anyway" != N ] && [ "$update_anyway" != n ]; then
             echo -e "invalid input, aborting now"
             exit
@@ -66,7 +66,7 @@ if [ "$option" = 1 ]; then
             echo -e "You didn't enter anything, aborting now."
             exit
         fi
-    
+
         if [ "$update_anyway" = Y ] || [ "$update_anyway" = y ]; then
             echo "Updating now..."
 	else
@@ -81,7 +81,7 @@ if [ "$option" = 2 ]; then
 
     # Installing a few packages which are missing on Raspbian Stretch Lite
     echo -e "\e[1;36m"Installing a few packages that are missing on Raspbian Stretch Lite..."\e[0m"
-    sudo apt-get install python3-pip -y 
+    sudo apt-get install python3-pip -y
     sudo apt-get install python-rpi.gpio-dbgsym -y python3-rpi.gpio -y python-rpi.gpio -y python3-rpi.gpio-dbgsym -y python3-spidev -y git -y libopenjp2-7-dev -y libtiff5 -y python3-numpy -y
     echo ""
 
@@ -101,7 +101,7 @@ if [ "$option" = 1 ] || [ "$option" = 2 ]; then
     sleep 1
     echo -e "\e[97mPlease type [y] for yes or [n] for no and confirm your selection with [ENTER]"
     read -r -p 'Waiting for input...  ' update
-    
+
     if [ "$update" != Y ] && [ "$update" != y ] && [ "$update" != N ] && [ "$update" != n ]; then
         echo -e "invalid input, aborting now"
         exit
@@ -110,7 +110,7 @@ if [ "$option" = 1 ] || [ "$option" = 2 ]; then
         echo -e "You didn't enter anything, aborting now."
         exit
     fi
-    
+
     if [ "$update" = Y ] || [ "$update" = y ]; then
         # Updating and upgrading the system, without taking too much space
         echo -e "\e[1;36m"Running apt-get update and apt-get dist-upgrade for you..."\e[0m"
@@ -122,10 +122,10 @@ if [ "$option" = 1 ] || [ "$option" = 2 ]; then
     fi
 
     # Installing dependencies
-    
+
     #PYOWM for user pi
     echo -e "\e[1;36m"Installing dependencies for the Inky-Calendar software"\e[0m"
-    
+
     echo -e "\e[1;36m"Checking if pyowm is installed for user pi"\e[0m"
     if python3.5 -c "import pyowm" &> /dev/null; then
         echo 'pyowm is installed, skipping installation of this package.'
@@ -133,7 +133,7 @@ if [ "$option" = 1 ] || [ "$option" = 2 ]; then
         echo 'pywom is not installed, attempting to install now'
 	pip3 install pyowm
     fi
-    
+
     #PYOWM for user sudo
     echo -e "\e[1;36m"Checking if pyowm is installed for user sudo"\e[0m"
     if sudo python3.5 -c "import pyowm" &> /dev/null; then
@@ -142,8 +142,8 @@ if [ "$option" = 1 ] || [ "$option" = 2 ]; then
         echo 'pywom is not installed, attempting to install now'
 	sudo pip3 install pyowm
     fi
-    
-    #Pillow for user pi  
+
+    #Pillow for user pi
     echo -e "\e[1;36m"Checking if Pillow is installed for user pi"\e[0m"
     if python3.5 -c "import PIL" &> /dev/null; then
         echo 'Pillow is installed, skipping installation of this package.'
@@ -151,7 +151,7 @@ if [ "$option" = 1 ] || [ "$option" = 2 ]; then
         echo 'Pillow is not installed, attempting to install now'
 	pip3 install Pillow==5.3.0
     fi
-    
+
     #Pillow for user sudo
     echo -e "\e[1;36m"Checking if Pillow is installed for user sudo"\e[0m"
     if sudo python3.5 -c "import PIL" &> /dev/null; then
@@ -160,26 +160,26 @@ if [ "$option" = 1 ] || [ "$option" = 2 ]; then
         echo 'Pillow is not installed, attempting to install now'
 	sudo pip3 install Pillow==5.3.0
     fi
-    
-    #Ics.py for user pi  
+
+    #Ics.py for user pi
     echo -e "\e[1;36m"Checking if ics is installed for user pi"\e[0m"
     if python3.5 -c "import ics" &> /dev/null; then
         echo 'ics is installed, skipping installation of this package.'
     else
         echo 'ics is not installed, attempting to install now'
-	pip3 install ics
+	pip3 install ics==0.5
     fi
-    
+
     #Ics.py for user sudo
     echo -e "\e[1;36m"Checking if ics is installed for user sudo"\e[0m"
     if sudo python3.5 -c "import ics" &> /dev/null; then
         echo 'ics is installed, skipping installation of this package.'
     else
         echo 'ics is not installed, attempting to install now'
-	sudo pip3 install ics
+	sudo pip3 install ics==0.5
     fi
 
-    #feedparser for user pi  
+    #feedparser for user pi
     echo -e "\e[1;36m"Checking if feedparser is installed for user pi"\e[0m"
     if python3.5 -c "import feedparser" &> /dev/null; then
         echo 'feedparser is installed, skipping installation of this package.'
@@ -187,7 +187,7 @@ if [ "$option" = 1 ] || [ "$option" = 2 ]; then
         echo 'feedparser is not installed, attempting to install now'
 	pip3 install feedparser
     fi
-    
+
     #feedparser for user sudo
     echo -e "\e[1;36m"Checking if feedparser is installed for user sudo"\e[0m"
     if sudo python3.5 -c "import feedparser" &> /dev/null; then
@@ -196,8 +196,8 @@ if [ "$option" = 1 ] || [ "$option" = 2 ]; then
         echo 'feedparser is not installed, attempting to install now'
 	sudo pip3 install feedparser
     fi
-    
-    #pytz for user pi  
+
+    #pytz for user pi
     echo -e "\e[1;36m"Checking if pytz is installed for user pi"\e[0m"
     if python3.5 -c "import pytz" &> /dev/null; then
         echo 'pytz is installed, skipping installation of this package.'
@@ -205,7 +205,7 @@ if [ "$option" = 1 ] || [ "$option" = 2 ]; then
         echo 'pytz is not installed, attempting to install now'
 	pip3 install pytz
     fi
-    
+
     #pytz for user sudo
     echo -e "\e[1;36m"Checking if pytz is installed for user sudo"\e[0m"
     if sudo python3.5 -c "import pytz" &> /dev/null; then
@@ -214,9 +214,9 @@ if [ "$option" = 1 ] || [ "$option" = 2 ]; then
         echo 'pytz is not installed, attempting to install now'
 	sudo pip3 install pytz
     fi
-    
+
     echo -e "\e[1;36m"Finished installing all dependencies"\e[0m"
-    
+
     # Clone the repository, then delete some non-required files
     echo -e "\e[1;36m"Installing the Inky-Calendar Software for your display"\e[0m"
     cd
@@ -227,7 +227,7 @@ if [ "$option" = 1 ] || [ "$option" = 2 ]; then
     cp README.md /home/pi/Inky-Calendar/
     cp LICENSE /home/pi/Inky-Calendar/
     cp -r .git /home/pi/Inky-Calendar/
-    
+
     # Make a copy of the sample settings.py file
     cd /home/pi/Inky-Calendar/Calendar
     cp settings.py.sample settings.py
@@ -269,14 +269,14 @@ EOF
     # Final words
     echo -e "\e[1;36m"The install was successful"\e[0m"
     echo -e "\e[1;36m"The programm is set to start at every boot."\e[0m"
-    
+
     echo -e "\e[1;31m"To enter your personal details, please use"\e[0m"
     echo -e "\e[1;31m"the Settings-Web-UI.html web-page"\e[0m"
     echo -e "\e[1;36m"To do so, open the file Settings-Web-UI.html from"\e[0m"
     echo -e "\e[1;36m"/home/pi/Inky-Calendar/Settings-Web-UI.html with your browser,"\e[0m"
     echo -e "\e[1;36m"add your details, click on generate and copy the settings.py"\e[0m"
     echo -e "\e[1;36m"file to /home/pi/Inky-Calendar/Calendar/"\e[0m"
-    
+
     echo -e "\e[1;36m"You can test if the programm works by typing:"\e[0m"
     echo -e "\e[1;36m"python3.5 /home/pi/Inky-Calendar/Calendar/E-Paper.py"\e[0m"
 fi

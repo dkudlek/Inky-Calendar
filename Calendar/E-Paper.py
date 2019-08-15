@@ -33,6 +33,7 @@ except Exception as e:
     print("Something didn't work right, maybe you're offline?"+e.reason)
 
 import e_paper_drivers
+from backends import calendar_backend
 epd = e_paper_drivers.EPD()
 
 
@@ -66,7 +67,9 @@ owm = pyowm.OWM(api_key, language=language)
 """Main loop starts from here"""
 def main():
     calibration_countdown = 'initial'
+    ics_cal = calendar_backend.CalendarBackend(ical_urls)
     while True:
+        ics_cal.update()
         time = datetime.now().replace(tzinfo=local_tz)
         print(time)
         hour = int(time.strftime("%H"))
@@ -325,61 +328,10 @@ def main():
 
 
             if middle_section is "Calendar" or "Agenda":
-                """Algorithm for filtering and sorting events from your
-                iCalendar/s"""
-                events_this_month = []
-                upcoming = []
-                today = time.today()
 
-                """Create a time span using the events_max_range value (in days)
-                to filter events in that range"""
-
-                time_span_calendar = time + timedelta(days=int(events_max_range))
-                time_span_agenda = time + timedelta(days=22)
-
-                if internet_available() is True:
-                    print('Internet connection test passed'+'\n')
-                    print('Fetching events from your calendar'+'\n')
-                    for icalendars in ical_urls:
-                        decode = str(urlopen(icalendars).read().decode())
-                        beginAlarmIndex = 0
-                        while beginAlarmIndex >= 0:
-                            beginAlarmIndex = decode.find('BEGIN:VALARM')
-                            if beginAlarmIndex >= 0:
-                                endAlarmIndex = decode.find('END:VALARM')
-                                decode = decode[:beginAlarmIndex] + decode[endAlarmIndex+12:]
-                        ical = Calendar(decode)
-                        for events in ical.events:
-                            if events.begin.date().year == today.year and events.begin.date().month == today.month:
-                                if int((events.begin).format('D')) not in events_this_month:
-                                    events_this_month.append(int((events.begin).format('D')))
-                            if middle_section is 'Agenda' and time <= events.end.datetime <= time_span_agenda:
-                                upcoming.append(events)
-                            if middle_section is 'Calendar' and time <= events.end.datetime <= time_span_calendar:
-                                upcoming.append(events)
-
-                    '''Fix some known bugs from ics.py'''
-                    for events in upcoming:
-                        if events.all_day and events.duration.days > 1:
-                            events.end = events.end.replace(days=-2)
-                            for i in range(1, events.duration.days):
-                                cc = events.clone()
-                                cc.begin = cc.begin.replace(days=+i)
-                                upcoming.append(cc)
-
-                    for events in upcoming:
-                        if events.begin.format('HH:mm') == '00:00':
-                            events.make_all_day()
-
-                    def event_begins(elem):
-                        return elem.begin
-
-                    upcoming.sort(key=event_begins)
-
-                else:
-                    print("Could not fetch events from your iCalendar.")
-                    print("Either the internet connection is too weak or we're offline.")
-
+                upcoming = ics_cal.get_events(calendar_backend.CalendarBackend.Scope.STARTING_TODAY_WITH_ACTIVE)
+                this_month = ics_cal.get_events(calendar_backend.CalendarBackend.Scope.THIS_MONTH)
+                events_this_month = [int((event.begin).format('D')) for event in this_month]
                 if middle_section is 'Agenda':
                     """For the agenda view, create a list containing dates and events of the next 22 days"""
                     if len(upcoming) is not 0:
