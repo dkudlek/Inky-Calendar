@@ -7,6 +7,7 @@ If you have any questions, feel free to open an issue at Github.
 
 Copyright by aceisace
 """
+from __future__ import print_function
 import calendar
 from datetime import datetime, date, timedelta
 from time import sleep
@@ -35,7 +36,7 @@ except Exception as e:
 import e_paper_drivers
 epd = e_paper_drivers.EPD()
 
-
+from calibration import calibration
 
 EPD_WIDTH = 640
 EPD_HEIGHT = 384
@@ -87,10 +88,10 @@ def main():
             if hour in calibration_hours:
                 if calibration_countdown is 'initial':
                     calibration_countdown = 0
-                    epd.calibration()
+                    calibration()
                 else:
                     if calibration_countdown % (60 // int(update_interval)) is 0:
-                        epd.calibration()
+                        calibration()
                         calibration_countdown = 0
 
             """Create a blank white page first"""
