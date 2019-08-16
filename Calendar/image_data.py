@@ -6,29 +6,30 @@ It also contains the positions of these icons on the E-Paper display
 """
 
 from PIL import Image
-from pathlib import Path
 im_open = Image.open
 import os
 
-path = Path(__file__).parents[0]
+path = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
+if path != "" and path[-1] != "/":
+    path += "/"
 
-wpath = path / 'resources' / 'weather-icons'
-dpath = path / 'resources' / 'days'
-opath = path / 'resources' / 'other'
-fpath = path / 'resources' / 'fonts'
+wpath = path+'weather-icons/'
+dpath = path+'days/'
+opath = path+'other/'
+fpath = path+'fonts/'
 
 NotoSansCJK = 'NotoSansCJK/NotoSansCJKsc-'
 NotoSans = 'NotoSans/NotoSans-SemiCondensed'
 weather_font = 'WeatherFont/weathericons-regular-webfont.ttf'
 
-weekday = im_open(opath / 'weekday.png')
-eventicon = im_open(opath / 'event.png')
-dateicon = im_open(opath / 'today.png')
-seperator = im_open(opath / 'seperator.jpeg')
-seperator2 = im_open(opath / 'seperator2.jpeg')
-black = im_open(opath / 'black.jpeg')
-white = im_open(opath / 'white.jpeg')
-red = im_open(opath / 'red.jpeg')
+weekday = im_open(opath+'weekday.png')
+eventicon = im_open(opath+'event.png')
+dateicon = im_open(opath+'today.png')
+seperator = im_open(opath+'seperator.jpeg')
+seperator2 = im_open(opath+'seperator2.jpeg')
+black = im_open(opath+'black.jpeg')
+white = im_open(opath+'white.jpeg')
+red = im_open(opath+'red.jpeg')
 
 wiconplace = (0, 0)
 tempplace = (299, 0)

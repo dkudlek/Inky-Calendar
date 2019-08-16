@@ -20,12 +20,12 @@ def calibration():
     for i in range(2):
         epd.init()
         print('Calibrating black...')
-        epd.display_image(black)
+        epd.display_frame(epd.get_frame_buffer(black))
         if display_colours == "bwr":
             print('calibrating red...')
-            epd.display_image(red)
+            epd.display_frame(epd.get_frame_buffer(red))
         print('Calibrating white...')
-        epd.display_image(white)
+        epd.display_frame(epd.get_frame_buffer(white))
         epd.sleep()
         print('Cycle', str(i+1)+'/2', 'complete'+'\n')
     print('Calibration complete')
