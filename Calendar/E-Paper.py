@@ -34,6 +34,7 @@ except Exception as e:
 
 import e_paper_drivers
 from backends import calendar_backend
+from widgets import calendar_widget
 epd = e_paper_drivers.EPD()
 
 
@@ -210,61 +211,10 @@ def main():
             """Using the built-in calendar to generate the monthly Calendar
             template"""
             cal = calendar.monthcalendar(time.year, time.month)
+            #image.show("Step1: Weather added")
 
-            if middle_section is "Calendar":
-                """Add the icon with the current month's name"""
-                write_text(384,60, now.format('MMMM',locale=language), monthplace, font=month_font)
 
-                """Add the line seperating the weather and Calendar section"""
-                image.paste(seperator, seperatorplace)
-
-                """Create a list containing the weekday abbrevations for the
-                chosen language"""
-                if week_starts_on is "Monday":
-                    prev_weekstart = now.replace(days = - now.weekday())
-                    image.paste(weekday, weekday_pos['pos'+str(now.weekday())], weekday)
-                if week_starts_on is "Sunday":
-                    prev_weekstart = now.replace(days = - now.isoweekday())
-                    image.paste(weekday, weekday_pos['pos'+str(now.isoweekday())], weekday)
-
-                weekday_names_list = []
-                for i in range(7):
-                    weekday_name = prev_weekstart.replace(days=+i)
-                    weekday_names_list.append(weekday_name.format('ddd',locale=language))
-
-                for i in range(len(weekday_names_list)):
-                    write_text(54, 28, weekday_names_list[i], weekday_pos['pos'+str(i)])
-
-                """Create the calendar template of the current month"""
-                for numbers in cal[0]:
-                    image.paste(im_open(str(dpath /(str(numbers)+'.jpeg'))), positions['a'+str(cal[0].index(numbers)+1)])
-                for numbers in cal[1]:
-                    image.paste(im_open(str(dpath /(str(numbers)+'.jpeg'))), positions['b'+str(cal[1].index(numbers)+1)])
-                for numbers in cal[2]:
-                    image.paste(im_open(str(dpath /(str(numbers)+'.jpeg'))), positions['c'+str(cal[2].index(numbers)+1)])
-                for numbers in cal[3]:
-                    image.paste(im_open(str(dpath /(str(numbers)+'.jpeg'))), positions['d'+str(cal[3].index(numbers)+1)])
-                for numbers in cal[4]:
-                    image.paste(im_open(str(dpath /(str(numbers)+'.jpeg'))), positions['e'+str(cal[4].index(numbers)+1)])
-                if len(cal) is 6:
-                    for numbers in cal[5]:
-                        image.paste(im_open(str(dpath /(str(numbers)+'.jpeg'))), positions['f'+str(cal[5].index(numbers)+1)])
-
-                """Draw a larger square on today's date"""
-                today = time.day
-                if today in cal[0]:
-                    image.paste(dateicon, positions['a'+str(cal[0].index(today)+1)], dateicon)
-                if today in cal[1]:
-                    image.paste(dateicon, positions['b'+str(cal[1].index(today)+1)], dateicon)
-                if today in cal[2]:
-                    image.paste(dateicon, positions['c'+str(cal[2].index(today)+1)], dateicon)
-                if today in cal[3]:
-                    image.paste(dateicon, positions['d'+str(cal[3].index(today)+1)], dateicon)
-                if today in cal[4]:
-                    image.paste(dateicon, positions['e'+str(cal[4].index(today)+1)], dateicon)
-                if len(cal) is 6 and today in cal[5]:
-                    image.paste(dateicon, positions['f'+str(cal[5].index(today)+1)], dateicon)
-
+            #image.show("Step2: This month calendar with today added")
             """Add rss-feeds at the bottom section of the Calendar"""
             if bottom_section is "RSS" and rss_feeds != []:
 
@@ -326,11 +276,17 @@ def main():
                     for lines in range(len(news)):
                         write_text(384, 25, news[lines], rss_places['line_'+str(lines+3)], alignment = 'left')
 
-
+            #image.show("Step3")
             if middle_section is "Calendar" or "Agenda":
-
                 upcoming = ics_cal.get_events(calendar_backend.CalendarBackend.Scope.STARTING_TODAY_WITH_ACTIVE)
                 this_month = ics_cal.get_events(calendar_backend.CalendarBackend.Scope.THIS_MONTH)
+
+                image.paste(seperator, seperatorplace)
+
+                widget = calendar_widget.CalendarWidget()
+                image.paste(widget.render(this_month), monthplace)
+                #image.show("Step4")
+#                print(ics_cal.get_active_events())  # to be used for active agenda points
                 events_this_month = [int((event.begin).format('D')) for event in this_month]
                 if middle_section is 'Agenda':
                     """For the agenda view, create a list containing dates and events of the next 22 days"""
@@ -367,23 +323,7 @@ def main():
                             write_text(384, 25, agenda_list[lines]['value'], agenda_view_lines['line'+str(lines+1)], alignment='left')
                         else:
                             write_text(384, 25, agenda_list[lines]['value'], agenda_view_lines['line'+str(lines+1)])
-
-            if middle_section is 'Calendar':
-                """Draw smaller squares on days with events"""
-                for numbers in events_this_month:
-                    if numbers in cal[0]:
-                        image.paste(eventicon, positions['a'+str(cal[0].index(numbers)+1)], eventicon)
-                    if numbers in cal[1]:
-                        image.paste(eventicon, positions['b'+str(cal[1].index(numbers)+1)], eventicon)
-                    if numbers in cal[2]:
-                        image.paste(eventicon, positions['c'+str(cal[2].index(numbers)+1)], eventicon)
-                    if numbers in cal[3]:
-                        image.paste(eventicon, positions['d'+str(cal[3].index(numbers)+1)], eventicon)
-                    if numbers in cal[4]:
-                        image.paste(eventicon, positions['e'+str(cal[4].index(numbers)+1)], eventicon)
-                    if len(cal) is 6 and numbers in cal[5]:
-                        image.paste(eventicon, positions['f'+str(cal[5].index(numbers)+1)], eventicon)
-
+            #image.show("Step5: Events added")
             """Write event dates and names on the E-Paper"""
             if bottom_section is "Events":
                 if len(cal) is 5:
@@ -401,14 +341,14 @@ def main():
                         write_text(70, 25, readable_date, date_positions['d'+str(dates+3)])
                     for events in range(len(upcoming)):
                         write_text(314, 25, upcoming[events].name, event_positions['e'+str(events+3)], alignment = 'left')
-
+            #image.show("Step6: Agenda added")
             'Show the time of the last update if set in the settings file'
             if show_last_update_time is 'True':
                 if hours is "24":
                     write_text(384, 25, 'Image created at '+now.format('H:mm'), (0, 615))
                 if hours is "12":
                     write_text(384, 25, 'Image created at '+now.format('h:mm a'), (0, 615))
-
+            #image.show("Step7: Time created added")
 
             """
             Map all pixels of the generated image to red, white and black
@@ -439,7 +379,7 @@ def main():
             if middle_section is 'Calendar':
                 del events_this_month
                 del upcoming
-                del weekday_names_list
+#                del weekday_names_list
 
             if bottom_section is 'RSS':
                 del rss_feed
