@@ -22,6 +22,7 @@ from pytz import timezone
 from tzlocal import get_localzone
 
 from settings import *
+import yaml
 from image_data import *
 
 from PIL import Image, ImageDraw, ImageFont, ImageOps
@@ -68,9 +69,7 @@ owm = pyowm.OWM(api_key, language=language)
 """Main loop starts from here"""
 def main():
     calibration_countdown = 'initial'
-    ics_cal = calendar_backend.CalendarBackend(ical_urls)
     while True:
-        ics_cal.update()
         time = datetime.now().replace(tzinfo=local_tz)
         print(time)
         hour = int(time.strftime("%H"))
@@ -80,7 +79,18 @@ def main():
         seconds = int(time.strftime("%S"))
         now = arrow.now(tz=system_tz)
 
+        config = None
+        settings_path = Path(__file__).absolute().parents[0] / "settings.yaml"
+        with open(str(settings_path), 'r') as stream:
+            try:
+                config = yaml.safe_load(stream)
+                #print(config)
+            except yaml.YAMLError as exc:
+                print(exc)
+
         for i in range(1):
+            ics_cal = calendar_backend.CalendarBackend(config)
+            ics_cal.update()
             print('_________Starting new loop___________'+'\n')
 
             """Start by printing the date and time for easier debugging"""
@@ -283,7 +293,7 @@ def main():
 
                 image.paste(seperator, seperatorplace)
 
-                widget = calendar_widget.CalendarWidget()
+                widget = calendar_widget.CalendarWidget(config)
                 image.paste(widget.render(this_month), monthplace)
                 #image.show("Step4")
 #                print(ics_cal.get_active_events())  # to be used for active agenda points

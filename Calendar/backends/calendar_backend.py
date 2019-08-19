@@ -19,8 +19,9 @@ class CalendarBackend:
         THIS_MONTH = 6
         TODAY = 7
 
-    def __init__(self, list_of_urls):
-        self.ical_urls = list_of_urls
+    def __init__(self, config):
+        self.config = config
+        self.ical_urls = config['CalendarBackend']['ical_urls']
         self.local_tz = get_localzone()
         self.events = None
 
@@ -105,10 +106,18 @@ class CalendarBackend:
 
 
 if __name__ == "__main__":
-    ical_urls = ["https://calendar.google.com/calendar/ical/en.usa%23holiday%40group.v.calendar.google.com/public/basic.ics"]
-    cal = CalendarBackend(ical_urls)
+    import yaml
+    config = None
+    with open("../settings.yaml", 'r') as stream:
+        try:
+            config = yaml.safe_load(stream)
+            #print(config)
+        except yaml.YAMLError as exc:
+            print(exc)
+    cal = CalendarBackend(config)
     for x in CalendarBackend.Scope:
         print("\n\n\n{}".format(x))
+        cal.update()
         evn = cal.get_events(mode=x)
         for e in evn:
             print(repr(e))

@@ -16,3 +16,4 @@ python3-spidev
 python3-numpy
 pytz
 tzlocal
+pyyaml

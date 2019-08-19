@@ -3,14 +3,6 @@ from pathlib import Path
 import arrow
 import calendar
 
-EPD_HEIGHT = 384
-EPD_WIDTH  = 640
-
-
-
-language = 'de_DE'
-
-
 def write_text(image, box_width, box_height, text, tuple, font, alignment='middle'):
     text_width, text_height = font.getsize(text)
     while (text_width, text_height) > (box_width, box_height):
@@ -26,72 +18,76 @@ def write_text(image, box_width, box_height, text, tuple, font, alignment='middl
     image.paste(space, tuple)
 
 class CalendarWidget:
-    def __init__(self, resources_path=None):
+    def __init__(self, config, resources_path=None):
         if resources_path is None:
             resources_path = Path(__file__).absolute().parents[1] / 'resources'
-
-        self.width = EPD_WIDTH
-        self.height = EPD_HEIGHT
-        self.heigh_actual = None
+        self.width = config['general']['epd_width']
+        self.height = config['general']['epd_height']
+        self.height_actual = None
         self.resources_path = resources_path
-        NotoSans = 'NotoSans/NotoSans-SemiCondensed'
-        fpath = resources_path / 'fonts'
-        self.font = ImageFont.truetype(str(fpath / (NotoSans + 'Light.ttf')), 18)
+        self.config = config
 
     def render(self, month_events=None):
-        image = Image.new('RGB', (self.height, self.width), 'white')
-        now = arrow.now()
-        weekday_names_list = arrow.locales.get_locale(language).day_abbreviations[1:]
+        app_style = self.config['general']['app_style']
+        language = self.config['general']['language']
+        week_starts_on = self.config['CalenderWidget']['week_start']
+        show_weekday_indicator = self.config['CalenderWidget']['show_weekday_indicator']
 
-        week_starts_on = "Sunday"
-        if week_starts_on is "Monday":
+        weekday_names_list = arrow.locales.get_locale(language).day_abbreviations[1:]
+        if week_starts_on == "Monday":
             calendar.setfirstweekday(calendar.MONDAY)
-        elif week_starts_on is "Sunday":
+        elif week_starts_on == "Sunday":
             calendar.setfirstweekday(calendar.SUNDAY)
             weekday_names_list = weekday_names_list[-1:] + weekday_names_list[0:-1]
 
-        cal = calendar.monthcalendar(now.year, now.month)
-        opath = self.resources_path / 'other'
-        weekday = Image.open(opath / 'weekday.png')
-        row_ptr = 0
+        now = arrow.now()
+
+        fpath = self.resources_path / 'fonts'
+        month_style = self.config['CalenderWidget'][app_style]['month']
+        month_font = ImageFont.truetype(str(fpath / (month_style['font'])), month_style['size'])
+        month_size = month_style['size'] + 2 * month_style['margin']
+        weekday_style = self.config['CalenderWidget'][app_style]['weekday']
+        weekday_font = ImageFont.truetype(str(fpath / (weekday_style['font'])), weekday_style['size'])
+        weekday_size = weekday_style['size'] + 2 * weekday_style['margin']
 
         """Events"""
         days = None
         if month_events is not None:
             days = [ev.begin.date().day for ev in month_events]
 
+        row_ptr = 0
+        image = Image.new('RGB', (self.width, self.height), 'white')
         """Add the icon with the current month's name"""
-        headline_size = 60
-        write_text(image, self.width, headline_size, now.format('MMMM',locale=language), (0, row_ptr), font=self.font)
-        row_ptr += headline_size
+        write_text(image, self.width, month_size,
+                   now.format('MMMM', locale=language), (0, row_ptr),
+                   font=month_font)
+        row_ptr += month_size
 
-        """Create a list containing the weekday abbrevations for the
-        chosen language"""
-
-        weekday_size = 28
-        left_margin = 3
-        cal_x = row_ptr
-        cal_y = left_margin
-        cal_y_offset = 54
+        cal = calendar.monthcalendar(now.year, now.month)
+        weekday_left_margin = 2
+        weekday_x = row_ptr
+        weekday_y = weekday_left_margin
+        weekday_y_offset = 54
+        weekday = Image.open(self.resources_path / 'other' / 'weekday.png')
         for idx, name in enumerate(weekday_names_list):
-            write_text(image, 54, weekday_size, name, (cal_y, cal_x), font=self.font)
-            if name in now.format('ddd',locale=language):
-                image.paste(weekday, (cal_y, cal_x), weekday)
-            cal_y += cal_y_offset
+            write_text(image, 54, weekday_size, name, (weekday_y, weekday_x), font=weekday_font)
+            if name in now.format('ddd',locale=language) and show_weekday_indicator:
+                image.paste(weekday, (weekday_y, weekday_x), weekday)
+            weekday_y += weekday_y_offset
         row_ptr += weekday_size
 
         """Create the calendar template of the current month"""
         dpath = self.resources_path / 'days'
-        left_margin = 3
-        cal_x = row_ptr
-        cal_y = left_margin
-        cal_x_offset = 63
-        cal_y_offset = 54
+        left_margin = weekday_left_margin
+        day_x = row_ptr
+        day_y = left_margin
+        day_x_offset = 63
+        day_y_offset = 54
         for row in cal:
-            cal_y = left_margin
+            day_y = left_margin
             for col in row:
                 path = dpath / '{}.jpeg'.format(col)
-                pos = (cal_y, cal_x)
+                pos = (day_y, day_x)
                 with Image.open(path) as number_img:
                     image.paste(number_img, pos)
 
@@ -105,12 +101,20 @@ class CalendarWidget:
                         image.paste(event_img, pos, event_img)
 
 
-                cal_y += cal_y_offset
-            cal_x += cal_x_offset
-        row_ptr = cal_x
-        self.heigh_actual = row_ptr
-        return image.crop((0,0, self.width, row_ptr))
+                day_y += day_y_offset
+            day_x += day_x_offset
+        row_ptr = day_x
+        self.height_actual = row_ptr
+        return image.crop((0, 0, self.width, self.height_actual))
 
 if __name__ == "__main__":
-    widget = CalendarWidget()
+    import yaml
+    config = None
+    with open("../settings.yaml", 'r') as stream:
+        try:
+            config = yaml.safe_load(stream)
+            #print(config)
+        except yaml.YAMLError as exc:
+            print(exc)
+    widget = CalendarWidget(config=config)
     widget.render().show()

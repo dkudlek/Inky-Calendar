@@ -1,0 +1,33 @@
+general:
+  language: 'de'
+  epd_height: 640
+  epd_width:  384
+  app_style: 'style_default'
+  settings: 'bw'  # bw || bwr
+
+CalenderWidget:
+  week_start: 'Sunday'
+  show_weekday_indicator: True
+  show_fullsized: True
+  style_default:
+    month:
+      font: 'NotoSans/NotoSans-SemiCondensedLight.ttf'
+      size: 40
+      margin: 10
+    weekday:
+      font: 'NotoSans/NotoSans-SemiCondensedLight.ttf'
+      size: 18
+      margin: 5
+  style_alt:
+    month:
+      font: 'NotoSansCJK/NotoSansCJKsc-Light.otf'
+      size: 40
+      margin: 10
+    weekday:
+      font: 'NotoSansCJK/NotoSansCJKsc-Light.otf'
+      size: 18
+      margin: 5
+
+CalendarBackend:
+  ical_urls:
+    - "https://calendar.google.com/calendar/ical/en.usa%23holiday%40group.v.calendar.google.com/public/basic.ics"
