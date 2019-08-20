@@ -1,5 +1,8 @@
-import epdif as epdif
-#import fake_epdif as epdif
+try:
+    import epdif as epdif
+except:
+    import fake_epdif as epdif
+    print("fake interface is used. No EPD output")
 import time
 from PIL import Image
 from settings import display_colours

@@ -3,7 +3,6 @@ from enum import Enum
 from urllib.request import urlopen
 from pytz import timezone
 from datetime import datetime, date, timedelta
-from tzlocal import get_localzone
 import arrow
 
 
@@ -11,18 +10,16 @@ import arrow
 class CalendarBackend:
     class Scope(Enum):
         ALL = 0
-        STARTING_THIS_YEAR = 1
-        STARTING_THIS_MONTH = 2
-        STARTING_TODAY = 3
-        STARTING_TODAY_WITH_ACTIVE = 4
-        THIS_YEAR = 5
-        THIS_MONTH = 6
-        TODAY = 7
+        THIS_YEAR = 2
+        THIS_MONTH = 3
+        TODAY = 4
+        NEXT = 5
+        ACTIVE = 6
 
     def __init__(self, config):
         self.config = config
         self.ical_urls = config['CalendarBackend']['ical_urls']
-        self.local_tz = get_localzone()
+        self.timezone = config['general']['timezone']
         self.events = None
 
     def update(self):
@@ -38,70 +35,27 @@ class CalendarBackend:
                     all_events += events
         self.events = sorted(all_events, key=lambda x: x.begin)
 
-    def get_active_events(self):
-        assert(self.events is not None)
-        arr_time = arrow.now()
-        result = []
-        for event in self.events:
-            event_start = event.begin.datetime
-            event_end = event.end.datetime
-            active = False
-            if event.all_day:
-                active = (event_start.date() <= arr_time.date()
-                          and arr_time.date() < event_end.date())
-            else:
-                active = (event_start <= arr_time and arr_time <= event_end)
-            if active:
-                result.append(event)
-        return result
-
     def get_events(self, mode=None):
         assert(self.events is not None)
-        if (mode is None) or (mode.name not in self.Scope.__members__.keys()):
-            mode = self.Scope.ALL
-        local_tz = get_localzone()
-        time = datetime.now()
-        today = time.replace(tzinfo=local_tz).today()
-        arr_time = arrow.now()
-        result = []
-        for event in self.events:
-            event_start = event.begin.datetime
-            event_end = event.end.datetime
-            same_year = (event_start.year == today.year)
-            same_year_or_greater = (event_start.year >= today.year)
-            same_month = (event_start.month == today.month)
-            same_month_or_greater = (event_start.month >= today.month)
-            same_day = (event_start.day == today.day)
-            same_day_or_greater = (event_start.day >= today.day)
-            active = False
-            if event.all_day:
-                active = (event_start.date() <= arr_time.date()
-                          and arr_time.date() < event_end.date())
-            else:
-                active = (event_start <= arr_time and arr_time <= event_end)
-            if self.Scope.ALL == mode:
-                result.append(event)
-            elif self.Scope.STARTING_THIS_YEAR == mode:
-                if same_year_or_greater:
-                    result.append(event)
-            elif self.Scope.STARTING_THIS_MONTH == mode:
-                if (same_year_or_greater and same_month_or_greater):
-                    result.append(event)
-            elif self.Scope.STARTING_TODAY == mode:
-                if (same_year_or_greater and same_month_or_greater and same_day_or_greater):
-                    result.append(event)
-            elif self.Scope.STARTING_TODAY_WITH_ACTIVE == mode:
-                if ((same_year_or_greater and same_month_or_greater and same_day_or_greater) or active):
-                    result.append(event)
-            elif self.Scope.THIS_YEAR == mode:
-                if same_year:
-                    result.append(event)
-            elif self.Scope.THIS_MONTH == mode:
-                if (same_year and same_month):
-                    result.append(event)
-            elif self.Scope.TODAY == mode:
-                if (same_year and same_month and same_day):
-                    result.append(event)
+        time_now = arrow.now(self.timezone)
+        event_filter = None
+        if self.Scope.THIS_YEAR == mode:
+            event_filter = lambda x: x.begin.date().year == time_now.date().year
+        elif self.Scope.THIS_MONTH == mode:
+            event_filter = lambda x: (x.begin.date().year == time_now.date().year
+                                      and x.begin.date().month == time_now.date().month)
+        elif self.Scope.TODAY == mode:
+            event_filter = lambda x: (x.begin.date().year == time_now.date().year
+                                      and x.begin.date().month == time_now.date().month
+                                      and x.begin.date().day == time_now.date().day)
+        elif self.Scope.NEXT == mode:
+            event_filter = lambda x: x.begin.datetime > time_now.datetime
+        elif self.Scope.ACTIVE == mode:
+            event_filter = lambda x: (x.begin.datetime <= time_now.datetime
+                                      and x.end.datetime >= time_now.datetime)
+        else:
+            event_filter = lambda x: x
+        result = list(filter(event_filter, self.events))
         return result
 
 

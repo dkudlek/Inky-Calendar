@@ -288,8 +288,9 @@ def main():
 
             #image.show("Step3")
             if middle_section is "Calendar" or "Agenda":
-                upcoming = ics_cal.get_events(calendar_backend.CalendarBackend.Scope.STARTING_TODAY_WITH_ACTIVE)
-                this_month = ics_cal.get_events(calendar_backend.CalendarBackend.Scope.THIS_MONTH)
+                scope = calendar_backend.CalendarBackend.Scope
+                upcoming = ics_cal.get_events(scope.NEXT)
+                this_month = ics_cal.get_events(scope.THIS_MONTH)
 
                 image.paste(seperator, seperatorplace)
 
