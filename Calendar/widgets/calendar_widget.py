@@ -8,7 +8,7 @@ from tools.text_writer import write_line, write_text
 class CalendarWidget:
     def __init__(self, config, resources_path=None):
         if resources_path is None:
-            resources_path = Path(__file__).absolute().parents[1] / 'resources'
+            resources_path = Path(__file__).absolute().parents[1]
         self.width = config['general']['epd_width']
         self.height = config['general']['epd_height']
         self.height_actual = None
@@ -67,7 +67,7 @@ class CalendarWidget:
         row_ptr += weekday_size
 
         """Create the calendar template of the current month"""
-        dpath = self.resources_path / 'days'
+        dpath = self.resources_path / image_resource['day_icon_folder']
         left_margin = weekday_left_margin
         day_x = row_ptr
         day_y = left_margin
@@ -96,16 +96,3 @@ class CalendarWidget:
         row_ptr = day_x
         self.height_actual = row_ptr
         return image.crop((0, 0, self.width, self.height_actual))
-
-#if __name__ == "__main__":
-#    import yaml
-#    config = None
-#    home = Path(__file__).absolute().parents[1]
-#    with open(str(home /"settings.yaml"), 'r') as stream:
-#        try:
-#            config = yaml.safe_load(stream)
-#            #print(config)
-#        except yaml.YAMLError as exc:
-#            print(exc)
-#    widget = CalendarWidget(config=config)
-#    widget.render().show()

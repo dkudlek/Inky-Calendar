@@ -1,7 +1,10 @@
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
+def get_line_height(font):
+    return font.getsize('Äj')[1]
+
 def write_text(box_width, box_height, text, font, alignment='middle'):
-    max_text_height = font.getsize('Äj')[1]
+    max_text_height = get_line_height(font)
     sections = text.splitlines()  # split on new line
     num_lines = int(box_height / max_text_height)
     y = int((box_height - (num_lines * max_text_height))/2.)
@@ -39,25 +42,3 @@ def write_line(box_width, box_height, text, font, alignment='middle'):
     space = Image.new('RGB', (box_width, box_height), color='white')
     ImageDraw.Draw(space).text((x, y), text, fill='black', font=font)
     return space
-
-
-#if __name__ == "__main__":
-#    import yaml
-#    from pathlib import Path
-#    config = None
-#    home = Path(__file__).absolute().parents[1]
-#    with open(str(home /"settings.yaml"), 'r') as stream:
-#        try:
-#            config = yaml.safe_load(stream)
-#            #print(config)
-#        except yaml.YAMLError as exc:
-#            print(exc)
-#    app_style = config['general']['app_style']
-#    resources_path = Path(__file__).absolute().parents[1] / 'resources'
-#    weekday_style = config['CalenderWidget'][app_style]['weekday']
-#    weekday_font = ImageFont.truetype(str(resources_path / (weekday_style['font'])), weekday_style['size'])
-#    test_string = 'abc def ghi jkl mno pqr stu vwxyz \nabc def ghi jkl mno pqr stu vwxyz'
-#    part = write_line(160, 80, test_string, font=weekday_font, alignment='left')
-#    part.show()
-#    part = write_text(160, 80, test_string, font=weekday_font, alignment='left')
-#    part.show()

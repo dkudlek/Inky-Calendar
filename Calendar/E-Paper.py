@@ -36,6 +36,7 @@ except Exception as e:
 import e_paper_drivers
 from backends import calendar_backend
 from widgets import calendar_widget
+from widgets import agenda_widget
 epd = e_paper_drivers.EPD()
 
 
@@ -80,6 +81,7 @@ def main():
         now = arrow.now(tz=system_tz)
 
         config = None
+
         settings_path = Path(__file__).absolute().parents[0] / "settings.yaml"
         with open(str(settings_path), 'r') as stream:
             try:
@@ -87,7 +89,7 @@ def main():
                 #print(config)
             except yaml.YAMLError as exc:
                 print(exc)
-
+        langage = config['general']['language']
         for i in range(1):
             ics_cal = calendar_backend.CalendarBackend(config)
             ics_cal.update()
@@ -291,11 +293,14 @@ def main():
                 scope = calendar_backend.CalendarBackend.Scope
                 upcoming = ics_cal.get_events(scope.NEXT)
                 this_month = ics_cal.get_events(scope.THIS_MONTH)
-
                 image.paste(seperator, seperatorplace)
 
                 widget = calendar_widget.CalendarWidget(config)
-                image.paste(widget.render(this_month), monthplace)
+                image.paste(widget.render(this_month), (0, 74))
+                agenda = agenda_widget.AgendaWidget(config)
+                agenda.height = 130
+                my_agenda = agenda.render(upcoming)
+                image.paste(my_agenda, (0, 490))
                 #image.show("Step4")
 #                print(ics_cal.get_active_events())  # to be used for active agenda points
                 events_this_month = [int((event.begin).format('D')) for event in this_month]
@@ -335,30 +340,14 @@ def main():
                         else:
                             write_text(384, 25, agenda_list[lines]['value'], agenda_view_lines['line'+str(lines+1)])
             #image.show("Step5: Events added")
-            """Write event dates and names on the E-Paper"""
-            if bottom_section is "Events":
-                if len(cal) is 5:
-                    del upcoming[6:]
-                    for dates in range(len(upcoming)):
-                        readable_date = upcoming[dates].begin.format('D MMM', locale=language)
-                        write_text(70, 25, readable_date, date_positions['d'+str(dates+1)])
-                    for events in range(len(upcoming)):
-                        write_text(314, 25, upcoming[events].name, event_positions['e'+str(events+1)], alignment = 'left')
 
-                if len(cal) is 6:
-                    del upcoming[4:]
-                    for dates in range(len(upcoming)):
-                        readable_date = upcoming[dates].begin.format('D MMM', locale=language)
-                        write_text(70, 25, readable_date, date_positions['d'+str(dates+3)])
-                    for events in range(len(upcoming)):
-                        write_text(314, 25, upcoming[events].name, event_positions['e'+str(events+3)], alignment = 'left')
-            #image.show("Step6: Agenda added")
             'Show the time of the last update if set in the settings file'
             if show_last_update_time is 'True':
+                text_string = config['general']['strings'][language]['short']['image_created']
                 if hours is "24":
-                    write_text(384, 25, 'Image created at '+now.format('H:mm'), (0, 615))
+                    write_text(384, 25, text_string.format(now.format('H:mm')), (0, 615))
                 if hours is "12":
-                    write_text(384, 25, 'Image created at '+now.format('h:mm a'), (0, 615))
+                    write_text(384, 25, text_string.format(now.format('h:mm a')), (0, 615))
             #image.show("Step7: Time created added")
 
             """
