@@ -29,14 +29,12 @@ from image_data import *
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import pyowm
 from ics import Calendar
-try:
-    from urllib.request import urlopen
-except Exception as e:
-    print("Something didn't work right, maybe you're offline?"+e.reason)
 
 import e_paper_drivers
 from backends import calendar_backend
-from widgets import calendar_widget, agenda_widget, timestamp_widget
+from widgets import calendar_widget, agenda_widget, timestamp_widget, weather_widget
+
+
 epd = e_paper_drivers.EPD()
 
 
@@ -148,85 +146,6 @@ def main():
                     return False
 
 
-            """Connect to Openweathermap API and fetch weather data"""
-            if top_section is "Weather" and api_key != "" and owm.is_API_online() is True:
-                try:
-                    print("Connecting to Openweathermap API servers...")
-                    observation = owm.weather_at_place(location)
-                    print("weather data:")
-                    weather = observation.get_weather()
-                    weathericon = weather.get_weather_icon_name()
-                    Humidity = str(weather.get_humidity())
-                    cloudstatus = str(weather.get_clouds())
-                    weather_description = (str(weather.get_detailed_status()))
-
-                    if units is "metric":
-                        Temperature = str(int(weather.get_temperature(unit='celsius')['temp']))
-                        windspeed = str(int(weather.get_wind()['speed']))
-                        write_text(50, 35, Temperature + " °C", (334, 0))
-                        write_text(100, 35, windspeed+" km/h", (114, 0))
-
-                    if units is "imperial":
-                        Temperature = str(int(weather.get_temperature('fahrenheit')['temp']))
-                        windspeed = str(int(weather.get_wind()['speed']*0.621))
-                        write_text(50, 35, Temperature + " °F", (334, 0))
-                        write_text(100, 35, windspeed+" mph", (114, 0))
-
-                    sunrisetime = arrow.get(weather.get_sunrise_time()).to(system_tz)
-                    sunsettime = arrow.get(weather.get_sunset_time()).to(system_tz)
-
-                    """Show the fetched weather data"""
-                    print('Temperature:',Temperature, '°C')
-                    print('Humidity:', Humidity, '%')
-                    print('Wind speed:', windspeed, 'km/h')
-                    print('Sunrise-time:', sunrisetime.format('HH:mm'))
-                    print('Sunset time:', sunsettime.format('HH:mm'))
-                    print('Cloudiness:', cloudstatus, '%')
-                    print('Weather description:', weather_description, '\n')
-
-                    """Add the weather icon at the top left corner"""
-                    write_text(70,70, weathericons[weathericon], wiconplace, font = w_font_l)
-
-                    """Add the temperature icon at it's position"""
-                    write_text(35,35, '\uf055', tempplace, font = w_font_s)
-
-                    """Add the humidity icon and display the humidity"""
-                    write_text(35,35, '\uf07a', humplace, font = w_font_s)
-                    write_text(50, 35, Humidity + " %", (334, 35))
-
-                    """Add the sunrise/sunset icon and display the time"""
-                    if (now <= sunrisetime and now <= sunsettime) or (now >= sunrisetime and now >= sunsettime):
-                        write_text(35,35, '\uf051', sunriseplace, font = w_font_s)
-                        print('sunrise coming next')
-                        if hours is "24":
-                            write_text(50, 35, sunrisetime.format('H:mm'), (249, 0))
-                        if hours is "12":
-                            write_text(50, 35, sunrisetime.format('h:mm'), (249, 0))
-
-                    if now >= sunrisetime and now <= sunsettime:
-                        write_text(35,35, '\uf052', sunriseplace, font = w_font_s)
-                        print('sunset coming next')
-                        if hours is "24":
-                            write_text(50, 35, sunsettime.format('H:mm'), (249, 0))
-                        if hours is "12":
-                            write_text(50, 35, sunsettime.format('h:mm'), (249, 0))
-
-                    """Add the wind icon at it's position"""
-                    write_text(35,35, '\uf050', windiconspace, font = w_font_s)
-
-                    """Add a short weather description"""
-                    write_text(229, 35, weather_description, (70, 35))
-
-                except Exception as e:
-                    """If no response was received from the openweathermap
-                    api server, add the cloud with question mark"""
-                    print('__________OWM-ERROR!__________'+'\n')
-                    print('Reason: ',e,'\n')
-                    write_text(70,70, '\uf07b', wiconplace, font = w_font_l)
-                    pass
-
-
-
             #image.show("Step2: This month calendar with today added")
             """Add rss-feeds at the bottom section of the Calendar"""
             if bottom_section is "RSS" and rss_feeds != []:
@@ -294,6 +213,9 @@ def main():
                 scope = calendar_backend.CalendarBackend.Scope
                 upcoming = ics_cal.get_events(scope.NEXT)
                 this_month = ics_cal.get_events(scope.THIS_MONTH)
+
+                my_weather = weather_widget.WeatherWidget(config)
+                image.paste(my_weather.render(), (0, 0))
 
                 idx = 72  # separator place
                 h = seperator.size[1]
