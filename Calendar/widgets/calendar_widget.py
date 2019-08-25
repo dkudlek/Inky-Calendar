@@ -31,10 +31,10 @@ class CalendarWidget:
 
         now = arrow.now()
 
-        month_style = widget[app_style]['month']
+        month_style = widget['style'][app_style]['month']
         month_font = ImageFont.truetype(str(self.resources_path  / (month_style['font'])), month_style['size'])
         month_size = month_style['size'] + 2 * month_style['margin']
-        weekday_style = widget[app_style]['weekday']
+        weekday_style = widget['style'][app_style]['weekday']
         weekday_font = ImageFont.truetype(str(self.resources_path  / (weekday_style['font'])), weekday_style['size'])
         weekday_size = weekday_style['size'] + 2 * weekday_style['margin']
 

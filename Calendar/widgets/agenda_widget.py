@@ -19,8 +19,7 @@ class AgendaWidget:
         app_style = self.config['general']['app_style']
         language = self.config['general']['language']
         tzinfo = timezone(str(self.config['general']['timezone']))
-        event_style = self.config['AgendaWidget'][app_style]['event']
-        font_name = event_style['font']
+        event_style = self.config['AgendaWidget']['style'][app_style]['event']
         font = ImageFont.truetype(str(self.resources_path / event_style['font']), event_style['size'])
         line_height = get_line_height(font)
 

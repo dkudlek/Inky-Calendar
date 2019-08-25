@@ -35,8 +35,7 @@ except Exception as e:
 
 import e_paper_drivers
 from backends import calendar_backend
-from widgets import calendar_widget
-from widgets import agenda_widget
+from widgets import calendar_widget, agenda_widget, timestamp_widget
 epd = e_paper_drivers.EPD()
 
 
@@ -212,18 +211,6 @@ def main():
                     write_text(70,70, '\uf07b', wiconplace, font = w_font_l)
                     pass
 
-            """Set the Calendar to start on the day specified by the settings file """
-            if week_starts_on is "Monday":
-                calendar.setfirstweekday(calendar.MONDAY)
-
-            """For those whose week starts on Sunday, change accordingly"""
-            if week_starts_on is "Sunday":
-                calendar.setfirstweekday(calendar.SUNDAY)
-
-            """Using the built-in calendar to generate the monthly Calendar
-            template"""
-            cal = calendar.monthcalendar(time.year, time.month)
-            #image.show("Step1: Weather added")
 
 
             #image.show("Step2: This month calendar with today added")
@@ -293,62 +280,31 @@ def main():
                 scope = calendar_backend.CalendarBackend.Scope
                 upcoming = ics_cal.get_events(scope.NEXT)
                 this_month = ics_cal.get_events(scope.THIS_MONTH)
-                image.paste(seperator, seperatorplace)
 
+                idx = 72  # separator place
+                h = seperator.size[1]
+                image.paste(seperator, (0, idx))
+
+                idx += h
                 widget = calendar_widget.CalendarWidget(config)
-                image.paste(widget.render(this_month), (0, 74))
+                my_calendar = widget.render(this_month)
+                h = my_calendar.size[1]
+                image.paste(widget.render(this_month), (0, idx))
+
+                idx += h
                 agenda = agenda_widget.AgendaWidget(config)
                 agenda.height = 130
                 my_agenda = agenda.render(upcoming)
-                image.paste(my_agenda, (0, 490))
-                #image.show("Step4")
-#                print(ics_cal.get_active_events())  # to be used for active agenda points
-                events_this_month = [int((event.begin).format('D')) for event in this_month]
-                if middle_section is 'Agenda':
-                    """For the agenda view, create a list containing dates and events of the next 22 days"""
-                    if len(upcoming) is not 0:
-                        while (upcoming[-1].begin.date().day - now.day) + len(upcoming) >= 22:
-                            del upcoming[-1]
-                    agenda_list = []
-                    for i in range(22):
-                        date = now.replace(days=+i)
-                        agenda_list.append({'value':date.format('ddd D MMM YY', locale=language),'type':'date'})
-                        for events in upcoming:
-                            if events.begin.date().day == date.day:
-                                if not events.all_day:
-                                    if hours is '24':
-                                        agenda_list.append({'value':events.begin.to(system_tz).format('HH:mm')+ ' '+ str(events.name), 'type':'timed_event'})
-                                    if hours is '12':
-                                        agenda_list.append({'value':events.begin.to(system_tz).format('hh:mm a')+ ' '+ str(events.name), 'type':'timed_event'})
-                                else:
-                                    agenda_list.append({'value':events.name, 'type':'full_day_event'})
+                h = my_agenda.size[1]
+                image.paste(my_agenda, (0, idx))
 
-                    if bottom_section is not "":
-                        del agenda_list[16:]
-                        image.paste(seperator2, agenda_view_lines['line17'])
+                idx += h
+                timestamp_wgt = timestamp_widget.TimestampWidget(config)
+                my_timestamp = timestamp_wgt.render()
+                image.paste(my_timestamp, (0, idx))
+#                image.show("Step4")
 
-                    if bottom_section is "":
-                        del agenda_list[22:]
-                        image.paste(seperator2, agenda_view_lines['line22'])
 
-                    for lines in range(len(agenda_list)):
-                        if agenda_list[lines]['type'] is 'date':
-                            write_text(384, 25, agenda_list[lines]['value'], agenda_view_lines['line'+str(lines+1)], font=semi, alignment='left')
-                            image.paste(seperator2, agenda_view_lines['line'+str(lines+1)])
-                        elif agenda_list[lines]['type'] is 'timed_event':
-                            write_text(384, 25, agenda_list[lines]['value'], agenda_view_lines['line'+str(lines+1)], alignment='left')
-                        else:
-                            write_text(384, 25, agenda_list[lines]['value'], agenda_view_lines['line'+str(lines+1)])
-            #image.show("Step5: Events added")
-
-            'Show the time of the last update if set in the settings file'
-            if show_last_update_time is 'True':
-                text_string = config['general']['strings'][language]['short']['image_created']
-                if hours is "24":
-                    write_text(384, 25, text_string.format(now.format('H:mm')), (0, 615))
-                if hours is "12":
-                    write_text(384, 25, text_string.format(now.format('h:mm a')), (0, 615))
-            #image.show("Step7: Time created added")
 
             """
             Map all pixels of the generated image to red, white and black
