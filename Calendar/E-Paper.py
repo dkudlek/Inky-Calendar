@@ -20,6 +20,7 @@ import feedparser
 import numpy as np
 from pytz import timezone
 from tzlocal import get_localzone
+import socket
 
 from settings import *
 import yaml
@@ -126,13 +127,26 @@ def main():
                 ImageDraw.Draw(space).text((x, y), text, fill='black', font=font)
                 image.paste(space, tuple)
 
-            """Check if internet is available by trying to reach google"""
-            def internet_available():
+            def internet_available(host="8.8.8.8", port=53, timeout=3):
+                """
+                Parameters:
+                -----------
+                Host: 8.8.8.8 (google-public-dns-a.google.com)
+                OpenPort: 53/tcp
+                Service: domain (DNS/TCP)
+
+                Credits:
+                -----------
+                https://stackoverflow.com/a/33117579
+                """
                 try:
-                    urlopen('https://google.com',timeout=5)
+                    socket.setdefaulttimeout(timeout)
+                    socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
                     return True
-                except URLError as err:
+                except socket.error as ex:
+                    print(ex)
                     return False
+
 
             """Connect to Openweathermap API and fetch weather data"""
             if top_section is "Weather" and api_key != "" and owm.is_API_online() is True:
@@ -332,22 +346,6 @@ def main():
             print('______Powering off the E-Paper until the next loop______'+'\n')
             epd.sleep()
 
-            if middle_section is 'Calendar':
-                del events_this_month
-                del upcoming
-#                del weekday_names_list
-
-            if bottom_section is 'RSS':
-                del rss_feed
-                del news
-
-            if middle_section is 'Agenda':
-                del agenda_list
-
-            del buffer
-            del image
-            del improved_image
-            gc.collect()
 
             if calibration_countdown is 'initial':
                 calibration_countdown = 0
