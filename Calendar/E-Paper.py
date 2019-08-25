@@ -42,19 +42,6 @@ epd = e_paper_drivers.EPD()
 EPD_WIDTH = 640
 EPD_HEIGHT = 384
 
-if language in ['ja','zh','zh_tw','ko']:
-    default = ImageFont.truetype(str(fpath / (NotoSansCJK + 'Light.otf')), 18)
-    semi = ImageFont.truetype(str(fpath / (NotoSansCJK + 'DemiLight.otf')), 18)
-    bold = ImageFont.truetype(str(fpath / (NotoSansCJK + 'Regular.otf')), 18)
-    month_font = ImageFont.truetype(str(fpath / (NotoSansCJK + 'DemiLight.otf')), 40)
-else:
-    default = ImageFont.truetype(str(fpath / (NotoSans + 'Light.ttf')), 18)
-    semi = ImageFont.truetype(str(fpath / (NotoSans + '.ttf')), 18)
-    bold = ImageFont.truetype(str(fpath / (NotoSans + 'Medium.ttf')), 18)
-    month_font = ImageFont.truetype(str(fpath / (NotoSans + 'Light.ttf')), 40)
-
-w_font_l = ImageFont.truetype(str(fpath / weather_font), 60)
-w_font_s = ImageFont.truetype(str(fpath / weather_font), 22)
 
 im_open = Image.open
 
@@ -110,134 +97,35 @@ def main():
             """Create a blank white page first"""
             image = Image.new('RGB', (EPD_HEIGHT, EPD_WIDTH), 'white')
 
-            """Custom function to display text on the E-Paper"""
-            def write_text(box_width, box_height, text, tuple, font=default, alignment='middle'):
-                text_width, text_height = font.getsize(text)
-                while (text_width, text_height) > (box_width, box_height):
-                    text=text[0:-1]
-                    text_width, text_height = font.getsize(text)
-                if alignment is "" or "middle" or None:
-                    x = int((box_width / 2) - (text_width / 2))
-                if alignment is 'left':
-                    x = 0
-                y = int((box_height / 2) - (text_height / 1.7))
-                space = Image.new('RGB', (box_width, box_height), color='white')
-                ImageDraw.Draw(space).text((x, y), text, fill='black', font=font)
-                image.paste(space, tuple)
 
-            def internet_available(host="8.8.8.8", port=53, timeout=3):
-                """
-                Parameters:
-                -----------
-                Host: 8.8.8.8 (google-public-dns-a.google.com)
-                OpenPort: 53/tcp
-                Service: domain (DNS/TCP)
+            scope = calendar_backend.CalendarBackend.Scope
+            upcoming = ics_cal.get_events(scope.NEXT)
+            this_month = ics_cal.get_events(scope.THIS_MONTH)
 
-                Credits:
-                -----------
-                https://stackoverflow.com/a/33117579
-                """
-                try:
-                    socket.setdefaulttimeout(timeout)
-                    socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
-                    return True
-                except socket.error as ex:
-                    print(ex)
-                    return False
+            my_weather = weather_widget.WeatherWidget(config)
+            image.paste(my_weather.render(), (0, 0))
 
+            idx = 72  # separator place
+            h = seperator.size[1]
+            image.paste(seperator, (0, idx))
 
-            #image.show("Step2: This month calendar with today added")
-            """Add rss-feeds at the bottom section of the Calendar"""
-            if bottom_section is "RSS" and rss_feeds != []:
+            idx += h
+            widget = calendar_widget.CalendarWidget(config)
+            my_calendar = widget.render(this_month)
+            h = my_calendar.size[1]
+            image.paste(widget.render(this_month), (0, idx))
 
-                """Custom function to display longer text into multiple lines (wrapping)"""
-                def multiline_text(text, max_width, font=default):
-                    lines = []
-                    if font.getsize(text)[0] <= max_width:
-                        lines.append(text)
-                    else:
-                        words = text.split(' ')
-                        i = 0
-                        while i < len(words):
-                            line = ''
-                            while i < len(words) and font.getsize(line + words[i])[0] <= max_width:
-                                line = line + words[i] + " "
-                                i += 1
-                            if not line:
-                                line = words[i]
-                                i += 1
-                            lines.append(line)
-                    return lines
+            idx += h
+            agenda = agenda_widget.AgendaWidget(config)
+            agenda.height = 130
+            my_agenda = agenda.render(upcoming)
+            h = my_agenda.size[1]
+            image.paste(my_agenda, (0, idx))
 
-                """Parse the RSS-feed titles and save them to a list"""
-                rss_feed = []
-                for feeds in rss_feeds:
-                    text = feedparser.parse(feeds)
-                    for posts in text.entries:
-                        rss_feed.append(posts.summary)#title
-
-                """Shuffle the list to prevent displaying the same titles over and over"""
-                random.shuffle(rss_feed)
-                news = []
-
-                """Remove all titles except the first 4 or 6,
-                depenfing on how much space is available on the """
-                if middle_section is 'Calendar' and len(cal) is 5 or middle_section is 'Agenda':
-                    del rss_feed[6:]
-
-                if len(cal) is 6:
-                    del rss_feed[4:]
-
-                """Split titles of the rss feeds into lines that can fit
-                on the Calendar and add them to a list"""
-                for title in range(len(rss_feeds)):
-                    news.append(multiline_text(rss_feed[title], 384))
-
-                news = [j for i in news for j in i]
-
-                """Display the split lines of the titles"""
-                if middle_section is 'Calendar' and len(cal) is 5 or middle_section is 'Agenda':
-                    if len(news) > 6:
-                        del news[6:]
-                    for lines in range(len(news)):
-                        write_text(384, 25, news[lines], rss_places['line_'+str(lines+1)], alignment = 'left')
-
-                if len(cal) is 6:
-                    if len(news) > 4:
-                        del news[4:]
-                    for lines in range(len(news)):
-                        write_text(384, 25, news[lines], rss_places['line_'+str(lines+3)], alignment = 'left')
-
-            #image.show("Step3")
-            if middle_section is "Calendar" or "Agenda":
-                scope = calendar_backend.CalendarBackend.Scope
-                upcoming = ics_cal.get_events(scope.NEXT)
-                this_month = ics_cal.get_events(scope.THIS_MONTH)
-
-                my_weather = weather_widget.WeatherWidget(config)
-                image.paste(my_weather.render(), (0, 0))
-
-                idx = 72  # separator place
-                h = seperator.size[1]
-                image.paste(seperator, (0, idx))
-
-                idx += h
-                widget = calendar_widget.CalendarWidget(config)
-                my_calendar = widget.render(this_month)
-                h = my_calendar.size[1]
-                image.paste(widget.render(this_month), (0, idx))
-
-                idx += h
-                agenda = agenda_widget.AgendaWidget(config)
-                agenda.height = 130
-                my_agenda = agenda.render(upcoming)
-                h = my_agenda.size[1]
-                image.paste(my_agenda, (0, idx))
-
-                idx += h
-                timestamp_wgt = timestamp_widget.TimestampWidget(config)
-                my_timestamp = timestamp_wgt.render()
-                image.paste(my_timestamp, (0, idx))
+            idx += h
+            timestamp_wgt = timestamp_widget.TimestampWidget(config)
+            my_timestamp = timestamp_wgt.render()
+            image.paste(my_timestamp, (0, idx))
 #                image.show("Step4")
 
 

@@ -52,9 +52,8 @@ class WeatherWidget:
 
         image = Image.new('RGB', (self.width, self.height), 'white')
         try:
-            print("Connecting to Openweathermap API servers...")
+            #print("Connecting to Openweathermap API servers...")
             observation = owm.weather_at_place(location)
-            print("weather data:")
             weather = observation.get_weather()
             weathericon = weather.get_weather_icon_name()
             humidity = str(weather.get_humidity())
@@ -80,7 +79,6 @@ class WeatherWidget:
 
             rise_set_icon = None
             rise_set_time = None
-            print(time_style)
             if (now <= sunrisetime and now <= sunsettime) or (now >= sunrisetime and now >= sunsettime):
                 rise_set_icon = write_line(35,35, '\uf051', weather_small_font)
                 print('sunrise coming next')
