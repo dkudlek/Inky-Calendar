@@ -130,4 +130,4 @@ class WeatherWidget:
             print('Reason: ',e,'\n')
             no_connection_image = write_line(70,70, '\uf07b', weather_large_font)
             image.paste(no_connection_image, (0, 0))
-        return image
+        return image.crop((0, 0, self.width, 70))

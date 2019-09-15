@@ -102,31 +102,30 @@ def main():
             upcoming = ics_cal.get_events(scope.NEXT)
             this_month = ics_cal.get_events(scope.THIS_MONTH)
 
-            my_weather = weather_widget.WeatherWidget(config)
-            image.paste(my_weather.render(), (0, 0))
+            # WeatherWidget
+            idx = 0
+            my_weather = weather_widget.WeatherWidget(config).render()
+            image.paste(my_weather, (0, idx))
+            idx += my_weather.size[1]  # separator place
 
-            idx = 72  # separator place
-            h = seperator.size[1]
+            # Separator
             image.paste(seperator, (0, idx))
-
-            idx += h
+            idx += seperator.size[1]
+            # CalendarWidget
             widget = calendar_widget.CalendarWidget(config)
             my_calendar = widget.render(this_month)
-            h = my_calendar.size[1]
             image.paste(widget.render(this_month), (0, idx))
-
-            idx += h
+            idx += my_calendar.size[1]
+            # AgendaWidget
             agenda = agenda_widget.AgendaWidget(config)
             agenda.height = 130
             my_agenda = agenda.render(upcoming)
-            h = my_agenda.size[1]
             image.paste(my_agenda, (0, idx))
-
-            idx += h
+            idx += my_agenda.size[1]
+            # TimestampeWidget
             timestamp_wgt = timestamp_widget.TimestampWidget(config)
             my_timestamp = timestamp_wgt.render()
             image.paste(my_timestamp, (0, idx))
-#                image.show("Step4")
 
 
 
