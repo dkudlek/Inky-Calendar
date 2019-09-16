@@ -6,7 +6,7 @@ from tools.text_writer import write_line, write_text, get_line_height
 
 
 class AgendaWidget:
-    def __init__(self, config, resources_path=None):
+    def __init__(self, config, backend, resources_path=None):
         if resources_path is None:
             resources_path = Path(__file__).absolute().parents[1]
         self.width = config['general']['epd_width']
@@ -14,8 +14,11 @@ class AgendaWidget:
         self.height_actual = None
         self.resources_path = resources_path
         self.config = config
+        self.backend = backend
 
-    def render(self, next_events):
+    def render(self):
+        scope = self.backend.Scope
+        next_events = self.backend.get_events(scope.NEXT)
         app_style = self.config['general']['app_style']
         language = self.config['general']['language']
         tzinfo = timezone(str(self.config['general']['timezone']))

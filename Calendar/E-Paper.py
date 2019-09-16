@@ -32,7 +32,7 @@ from ics import Calendar
 
 import e_paper_drivers
 from backends import calendar_backend
-from widgets import calendar_widget, agenda_widget, timestamp_widget, weather_widget
+from widgets import calendar_widget, agenda_widget, timestamp_widget, weather_widget, spacer_widget
 
 
 epd = e_paper_drivers.EPD()
@@ -109,23 +109,25 @@ def main():
             idx += my_weather.size[1]  # separator place
 
             # Separator
-            image.paste(seperator, (0, idx))
-            idx += seperator.size[1]
+            my_spacer = spacer_widget.SpacerWidget(config).render()
+            image.paste(my_spacer, (0, idx))
+            idx += my_spacer.size[1]
             # CalendarWidget
-            widget = calendar_widget.CalendarWidget(config)
-            my_calendar = widget.render(this_month)
-            image.paste(widget.render(this_month), (0, idx))
+            widget = calendar_widget.CalendarWidget(config, ics_cal)
+            my_calendar = widget.render()
+            image.paste(my_calendar, (0, idx))
             idx += my_calendar.size[1]
             # AgendaWidget
-            agenda = agenda_widget.AgendaWidget(config)
+            agenda = agenda_widget.AgendaWidget(config, ics_cal)
             agenda.height = 130
-            my_agenda = agenda.render(upcoming)
+            my_agenda = agenda.render()
             image.paste(my_agenda, (0, idx))
             idx += my_agenda.size[1]
             # TimestampeWidget
             timestamp_wgt = timestamp_widget.TimestampWidget(config)
             my_timestamp = timestamp_wgt.render()
             image.paste(my_timestamp, (0, idx))
+
 
 
 

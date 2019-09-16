@@ -6,7 +6,7 @@ from tools.text_writer import write_line, write_text
 
 
 class CalendarWidget:
-    def __init__(self, config, resources_path=None):
+    def __init__(self, config, backend=None, resources_path=None):
         if resources_path is None:
             resources_path = Path(__file__).absolute().parents[1]
         self.width = config['general']['epd_width']
@@ -14,8 +14,13 @@ class CalendarWidget:
         self.height_actual = None
         self.resources_path = resources_path
         self.config = config
+        self.backend = backend
 
-    def render(self, month_events=None):
+    def render(self):
+        month_events = None
+        if self.backend is not None:
+            scope = self.backend.Scope
+            month_events = self.backend.get_events(scope.THIS_MONTH)
         app_style = self.config['general']['app_style']
         language = self.config['general']['language']
         widget = self.config['CalenderWidget']
