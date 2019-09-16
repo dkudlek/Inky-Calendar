@@ -21,9 +21,13 @@ class WeatherWidget:
             resources_path = Path(__file__).absolute().parents[1]
         self.width = config['general']['epd_width']
         self.height = config['general']['epd_height']
+        self.max_height = None
         self.height_actual = None
         self.resources_path = resources_path
         self.config = config
+
+    def is_dynamic(self):
+        return False
 
     def render(self):
         app_style = self.config['general']['app_style']

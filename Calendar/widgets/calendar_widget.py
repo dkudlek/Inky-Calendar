@@ -11,10 +11,14 @@ class CalendarWidget:
             resources_path = Path(__file__).absolute().parents[1]
         self.width = config['general']['epd_width']
         self.height = config['general']['epd_height']
+        self.max_height = None
         self.height_actual = None
         self.resources_path = resources_path
         self.config = config
         self.backend = backend
+
+    def is_dynamic(self):
+        return False
 
     def render(self):
         month_events = None

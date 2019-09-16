@@ -21,6 +21,7 @@ class CalendarBackend:
         self.ical_urls = config['CalendarBackend']['ical_urls']
         self.timezone = config['general']['timezone']
         self.events = None
+        self.update()
 
     def update(self):
         all_events = None

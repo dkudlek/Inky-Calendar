@@ -24,7 +24,7 @@ import socket
 
 from settings import *
 import yaml
-from image_data import *
+from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import pyowm
@@ -33,6 +33,7 @@ from ics import Calendar
 import e_paper_drivers
 from backends import calendar_backend
 from widgets import calendar_widget, agenda_widget, timestamp_widget, weather_widget, spacer_widget
+from panels import base_panel
 
 
 epd = e_paper_drivers.EPD()
@@ -50,7 +51,7 @@ system_tz = get_localzone()
 local_tz = timezone(str(system_tz))
 
 print('Initialising weather')
-owm = pyowm.OWM(api_key, language=language)
+#owm = pyowm.OWM(api_key, language=language)
 
 """Main loop starts from here"""
 def main():
@@ -63,7 +64,6 @@ def main():
         year = int(time.now().strftime('%Y'))
         mins = int(time.strftime("%M"))
         seconds = int(time.strftime("%S"))
-        now = arrow.now(tz=system_tz)
 
         config = None
 
@@ -74,10 +74,7 @@ def main():
                 #print(config)
             except yaml.YAMLError as exc:
                 print(exc)
-        langage = config['general']['language']
         for i in range(1):
-            ics_cal = calendar_backend.CalendarBackend(config)
-            ics_cal.update()
             print('_________Starting new loop___________'+'\n')
 
             """Start by printing the date and time for easier debugging"""
@@ -94,42 +91,8 @@ def main():
                         epd.calibration()
                         calibration_countdown = 0
 
-            """Create a blank white page first"""
-            image = Image.new('RGB', (EPD_HEIGHT, EPD_WIDTH), 'white')
-
-
-            scope = calendar_backend.CalendarBackend.Scope
-            upcoming = ics_cal.get_events(scope.NEXT)
-            this_month = ics_cal.get_events(scope.THIS_MONTH)
-
-            # WeatherWidget
-            idx = 0
-            my_weather = weather_widget.WeatherWidget(config).render()
-            image.paste(my_weather, (0, idx))
-            idx += my_weather.size[1]  # separator place
-
-            # Separator
-            my_spacer = spacer_widget.SpacerWidget(config).render()
-            image.paste(my_spacer, (0, idx))
-            idx += my_spacer.size[1]
-            # CalendarWidget
-            widget = calendar_widget.CalendarWidget(config, ics_cal)
-            my_calendar = widget.render()
-            image.paste(my_calendar, (0, idx))
-            idx += my_calendar.size[1]
-            # AgendaWidget
-            agenda = agenda_widget.AgendaWidget(config, ics_cal)
-            agenda.height = 130
-            my_agenda = agenda.render()
-            image.paste(my_agenda, (0, idx))
-            idx += my_agenda.size[1]
-            # TimestampeWidget
-            timestamp_wgt = timestamp_widget.TimestampWidget(config)
-            my_timestamp = timestamp_wgt.render()
-            image.paste(my_timestamp, (0, idx))
-
-
-
+            panel = base_panel.BasePanel(config)
+            image = panel.render()
 
             """
             Map all pixels of the generated image to red, white and black
@@ -137,12 +100,13 @@ def main():
             """
             buffer = np.array(image)
             r,g,b = buffer[:,:,0], buffer[:,:,1], buffer[:,:,2]
-            if display_colours is "bwr":
+            display_colours = str(config['general']['settings'])
+            if display_colours == "bwr":
                 buffer[np.logical_and(r > 245, g > 245)] = [255,255,255] #white
                 buffer[np.logical_and(r > 245, g < 245)] = [255,0,0] #red
                 buffer[np.logical_and(r != 255, r == g )] = [0,0,0] #black
 
-            if display_colours is "bw":
+            if display_colours == "bw":
                 buffer[np.logical_and(r > 245, g > 245)] = [255,255,255] #white
                 buffer[g < 255] = [0,0,0] #black
 

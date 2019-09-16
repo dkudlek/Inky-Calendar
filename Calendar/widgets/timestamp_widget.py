@@ -15,6 +15,9 @@ class TimestampWidget:
         self.resources_path = resources_path
         self.config = config
 
+    def is_dynamic(self):
+        return False
+
     def render(self):
         app_style = self.config['general']['app_style']
         language = self.config['general']['language']

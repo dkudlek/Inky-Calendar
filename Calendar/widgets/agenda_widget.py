@@ -9,12 +9,16 @@ class AgendaWidget:
     def __init__(self, config, backend, resources_path=None):
         if resources_path is None:
             resources_path = Path(__file__).absolute().parents[1]
+        self.config = config
         self.width = config['general']['epd_width']
         self.height = config['general']['epd_height']
+        self.max_height = config['AgendaWidget']['max_height']
         self.height_actual = None
         self.resources_path = resources_path
-        self.config = config
         self.backend = backend
+
+    def is_dynamic(self):
+        return True
 
     def render(self):
         scope = self.backend.Scope
@@ -28,10 +32,10 @@ class AgendaWidget:
 
         index = 0
         text_offset = event_style['date_offset']
-        allowed_events = self.height / line_height
+        allowed_events = self.max_height / line_height
         num_next_events = len(next_events)
         max_events = int(min(allowed_events, num_next_events))
-        image = Image.new('RGB', (self.width, self.height), 'white')
+        image = Image.new('RGB', (self.width, self.max_height), 'white')
         while index < max_events:
             event = next_events[index]
             readable_date = event.begin.to(tzinfo)
