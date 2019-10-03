@@ -5,7 +5,12 @@ general:
   app_style: 'default'
   timezone: 'Europe/Berlin'
   time_style: 24  # 12 || 24
-  settings: 'bw'  # bw || bwr
+  update_interval: 60
+  display_colours: 'bw'  # bw || bwr
+  calibration_hours:
+    - 0
+    - 12
+    - 16
   strings:
     de:
       short:

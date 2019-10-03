@@ -35,7 +35,7 @@ from widgets import calendar_widget, agenda_widget, timestamp_widget, weather_wi
 from panels import base_panel
 
 
-epd = e_paper_drivers.EPD()
+
 
 
 
@@ -81,25 +81,29 @@ def main():
 
             """At the hours specified in the settings file,
             calibrate the display to prevent ghosting"""
-#            if hour in calibration_hours:
-#                if calibration_countdown is 'initial':
-#                    calibration_countdown = 0
-#                    epd.calibration()
-#                else:
-#                    if calibration_countdown % (60 // int(update_interval)) is 0:
-#                        epd.calibration()
-#                        calibration_countdown = 0
+
+            epd = e_paper_drivers.EPD(config)
+            calibration_hours = config['general']['calibration_hours']
+            update_interval = config['general']['update_interval']
+
+            if hour in calibration_hours:
+                if calibration_countdown is 'initial':
+                    calibration_countdown = 0
+                    epd.calibration()
+                else:
+                    if calibration_countdown % (60 // int(update_interval)) is 0:
+                        epd.calibration()
+                        calibration_countdown = 0
 
             panel = base_panel.BasePanel(config)
             image = panel.render()
-            image.show()
             """
             Map all pixels of the generated image to red, white and black
             so that the image can be displayed 'correctly' on the E-Paper
             """
             buffer = np.array(image)
             r,g,b = buffer[:,:,0], buffer[:,:,1], buffer[:,:,2]
-            display_colours = str(config['general']['settings'])
+            display_colours = str(config['general']['display_colours'])
             if display_colours == "bwr":
                 buffer[np.logical_and(r > 245, g > 245)] = [255,255,255] #white
                 buffer[np.logical_and(r > 245, g < 245)] = [255,0,0] #red

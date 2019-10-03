@@ -50,9 +50,11 @@ READ_VCOM_VALUE                             = 0x81
 VCM_DC_SETTING                              = 0x82
 
 class EPD:
-    def __init__(self):
-        self.width = EPD_WIDTH
-        self.height = EPD_HEIGHT
+    def __init__(self, config):
+        self.config = config['general']
+        self.width = self.config['epd_height']
+        self.height = self.config['epd_width']
+        self.display_colours = str(self.config['display_colours'])
 
 
     def digital_write(self, pin, value):
@@ -145,10 +147,11 @@ class EPD:
         self.wait_until_idle()
 
     def convert_image(self, image, display_mode='bw'):
+
         image_converted = None
         if display_mode is 'bwr':
             image_converted = image.convert('L', dither=None)
-        elif display_mode is 'bw':
+        else:  # default
             image_converted = image.convert('1')
 
         # sanity check
@@ -159,7 +162,7 @@ class EPD:
         return image_converted
 
     def display_image(self, image):
-        image_converted = self.convert_image(image, display_mode=display_colours)
+        image_converted = self.convert_image(image, display_mode=self.display_colours)
         buffer = self.serialize(image_converted)
         self.send_buffer(buffer)
 
