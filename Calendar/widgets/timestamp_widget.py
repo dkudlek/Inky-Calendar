@@ -11,6 +11,7 @@ class TimestampWidget:
             resources_path = Path(__file__).absolute().parents[1]
         self.width = config['general']['epd_width']
         self.height = config['general']['epd_height']
+        self.max_height = None
         self.height_actual = None
         self.resources_path = resources_path
         self.config = config

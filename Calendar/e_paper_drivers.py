@@ -5,7 +5,6 @@ except:
     print("fake interface is used. No EPD output")
 import time
 from PIL import Image
-from settings import display_colours
 
 # Display resolution
 EPD_WIDTH       = 640

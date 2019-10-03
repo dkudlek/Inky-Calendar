@@ -2,31 +2,132 @@ general:
   language: 'de'
   epd_height: 640
   epd_width:  384
-  app_style: 'style_default'
+  app_style: 'default'
+  timezone: 'Europe/Berlin'
+  time_style: 24  # 12 || 24
   settings: 'bw'  # bw || bwr
+  strings:
+    de:
+      short:
+        image_created: 'Bild um {} erstellt'
+      long:
+        image_created: 'Bild am {} um {} erstellt'
+    en:
+      short:
+        image_created: 'image created at {}'
+      long:
+        image_created: 'image created on {} at {}'
+    default:
+      short:
+        image_created: 'image created at {}'
+      long:
+        image_created: 'image created on {} at {}'
+
+WeatherWidget:
+  units: metric  # metric || imperial
+  location: 'Berlin, DE'
+  api_key: 'your_key_here'
+  layout:
+    temperature_pos: 334
+    windspeed_pos: 114
+  style:
+    default:
+      weather_large:
+        font: 'resources/fonts/WeatherFont/weathericons-regular-webfont.ttf'
+        size: 60
+      weather_small:
+        font: 'resources/fonts/WeatherFont/weathericons-regular-webfont.ttf'
+        size: 22
+      weather_regular:
+        font: 'resources/fonts/NotoSans/NotoSans-SemiCondensedLight.ttf'
+        size: 18
+        margin: 0
+    alternative:
+      weather_large:
+        font: 'resources/fonts/WeatherFont/weathericons-regular-webfont.ttf'
+        size: 60
+      weather_small:
+        font: 'resources/fonts/WeatherFont/weathericons-regular-webfont.ttf'
+        size: 22
+      weather_regular:
+        font: 'resources/fonts/NotoSansCJK/NotoSansCJKsc-Light.otf'
+        size: 18
+        margin: 0
+
+TimezoneWidget:
+  mode: 'long'  # short || long
+  style:
+    default:
+      timestamp:
+        font: 'resources/fonts/NotoSans/NotoSans-SemiCondensedLight.ttf'
+        size: 18
+        margin: 0
+    alternative:
+      timestamp:
+        font: 'resources/fonts/NotoSansCJK/NotoSansCJKsc-Light.otf'
+        size: 18
+        margin: 0
+  strings:
+    de:
+      short:
+        image_created: 'Bild um {} erstellt'
+      long:
+        image_created: 'Bild am {} um {} erstellt'
+    en:
+      short:
+        image_created: 'image created at {}'
+      long:
+        image_created: 'image created on {} at {}'
+    default:
+      short:
+        image_created: 'image created at {}'
+      long:
+        image_created: 'image created on {} at {}'
+
+AgendaWidget:
+  max_height: 130
+  style:
+    default:
+      event:
+        font: 'resources/fonts/NotoSans/NotoSans-SemiCondensedLight.ttf'
+        size: 18
+        margin: 0
+        date_offset: 70
+    alternative:
+      event:
+        font: 'resources/fonts/NotoSansCJK/NotoSansCJKsc-Light.otf'
+        size: 18
+        margin: 0
+        date_offset: 70
 
 CalenderWidget:
   week_start: 'Sunday'
   show_weekday_indicator: True
   show_fullsized: True
-  style_default:
-    month:
-      font: 'NotoSans/NotoSans-SemiCondensedLight.ttf'
-      size: 40
-      margin: 10
-    weekday:
-      font: 'NotoSans/NotoSans-SemiCondensedLight.ttf'
-      size: 18
-      margin: 5
-  style_alt:
-    month:
-      font: 'NotoSansCJK/NotoSansCJKsc-Light.otf'
-      size: 40
-      margin: 10
-    weekday:
-      font: 'NotoSansCJK/NotoSansCJKsc-Light.otf'
-      size: 18
-      margin: 5
+  image_resource:
+    weekday_mask: 'resources/other/weekday.png'
+    event_mask: 'resources/other/event.png'
+    today_mask: 'resources/other/today.png'
+    day_icon_folder: 'resources/days'
+  style:
+    default:
+      month:
+        font: 'resources/fonts/NotoSans/NotoSans-SemiCondensedLight.ttf'
+        size: 40
+        margin: 10
+      weekday:
+        font: 'resources/fonts/NotoSans/NotoSans-SemiCondensedLight.ttf'
+        size: 18
+        margin: 5
+    alternative:
+      month:
+        font: 'resources/fonts/NotoSansCJK/NotoSansCJKsc-Light.otf'
+        size: 40
+        margin: 10
+      weekday:
+        font: 'resources/fonts/NotoSansCJK/NotoSansCJKsc-Light.otf'
+        size: 18
+        margin: 5
 
 CalendarBackend:
   ical_urls:

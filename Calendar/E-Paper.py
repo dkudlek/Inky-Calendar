@@ -22,7 +22,6 @@ from pytz import timezone
 from tzlocal import get_localzone
 import socket
 
-from settings import *
 import yaml
 from pathlib import Path
 
@@ -82,18 +81,18 @@ def main():
 
             """At the hours specified in the settings file,
             calibrate the display to prevent ghosting"""
-            if hour in calibration_hours:
-                if calibration_countdown is 'initial':
-                    calibration_countdown = 0
-                    epd.calibration()
-                else:
-                    if calibration_countdown % (60 // int(update_interval)) is 0:
-                        epd.calibration()
-                        calibration_countdown = 0
+#            if hour in calibration_hours:
+#                if calibration_countdown is 'initial':
+#                    calibration_countdown = 0
+#                    epd.calibration()
+#                else:
+#                    if calibration_countdown % (60 // int(update_interval)) is 0:
+#                        epd.calibration()
+#                        calibration_countdown = 0
 
             panel = base_panel.BasePanel(config)
             image = panel.render()
-
+            image.show()
             """
             Map all pixels of the generated image to red, white and black
             so that the image can be displayed 'correctly' on the E-Paper
